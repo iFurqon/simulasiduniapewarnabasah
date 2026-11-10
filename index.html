@@ -1,0 +1,3676 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simulasi Dunia Pewarna Basah - Laboratorium Maya</title>
+    <style>
+        /* ==========================================================================
+           SISTEM DESAIN & TATA LETAK 16:9 OFFLINE (TANPA DEPENDENSI EKSTERNAL)
+           ========================================================================== */
+        :root {
+            --bg-dark: #0b132b;
+            --lab-wall-top: #1c2541;
+            --lab-wall-bottom: #3a506b;
+            --bench-top: #d8c3a5;
+            --bench-edge: #8e735b;
+            --glass-border: rgba(255, 255, 255, 0.45);
+            --primary-accent: #00b4d8;
+            --secondary-accent: #f77f00;
+            --success: #2ec4b6;
+            --danger: #e71d36;
+            --warning: #ff9f1c;
+            --text-dark: #1d2d44;
+            --text-light: #f8f9fa;
+            --font-main: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a2639 0%, #090d16 100%);
+            font-family: var(--font-main);
+            position: relative;
+        }
+
+        /* Kontainer Utama Rasio Fix 16:9 (Resolusi Internal Pasti 1600 x 900 Tanpa Terpotong) */
+        #stage-wrapper {
+            width: 1600px;
+            height: 900px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            overflow: hidden;
+            border-radius: 18px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 0 4px rgba(255, 255, 255, 0.12);
+            background: url("assets/latar.gif") center center / cover no-repeat;
+            transform-origin: center center;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Dekorasi Latar Laboratorium 3D */
+        .lab-bg-decor {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Efek Ubin Dinding Lab & Pencahayaan */
+        .lab-wall-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 62%;
+            background-image: 
+                radial-gradient(circle at 50% 20%, rgba(72, 202, 228, 0.18), transparent 70%);
+            background-size: 100% 100%;
+        }
+
+        /* Rak Dinding 3D */
+        .lab-shelf {
+            display: none;
+        }
+
+        /* Meja Laboratorium 3D Realistik */
+        .lab-bench-surface {
+            display: none;
+        }
+
+        .lab-bench-front {
+            display: none;
+        }
+
+        /* ==========================================================================
+           HEADER NAVIGASI LABORATORIUM
+           ========================================================================== */
+        .top-navbar {
+            position: absolute;
+            top: 16px;
+            left: 24px;
+            right: 24px;
+            height: 76px;
+            background: linear-gradient(180deg, rgba(29, 53, 87, 0.92) 0%, rgba(15, 28, 46, 0.96) 100%);
+            border-radius: 20px;
+            border: 2px solid rgba(168, 218, 220, 0.35);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.45), inset 0 2px 3px rgba(255,255,255,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 50;
+            backdrop-filter: blur(8px);
+        }
+
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            box-shadow: 0 4px 10px rgba(0, 180, 216, 0.4), inset 0 2px 4px rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-title h1 {
+            color: #ffffff;
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .brand-title span {
+            color: #90e0ef;
+            font-size: 13px;
+            font-weight: 600;
+            display: block;
+        }
+
+        /* Tombol Slide Navigasi */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-3d {
+            position: relative;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            font-family: var(--font-main);
+            font-weight: 700;
+            border-radius: 14px;
+            padding: 10px 18px;
+            font-size: 15px;
+            color: #fff;
+            background: linear-gradient(180deg, #3a86ff 0%, #00509d 100%);
+            box-shadow: 0 6px 0 #00296b, 0 8px 15px rgba(0,0,0,0.35), inset 0 2px 2px rgba(255,255,255,0.45);
+            transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-3d:hover {
+            filter: brightness(1.08);
+        }
+
+        .btn-3d:active, .btn-3d.active-tab {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #00296b, 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.4);
+        }
+
+        .btn-3d.active-tab {
+            background: linear-gradient(180deg, #ff9f1c 0%, #e76f51 100%);
+            box-shadow: 0 2px 0 #9b2226, 0 4px 12px rgba(255, 159, 28, 0.5), inset 0 2px 3px rgba(255,255,255,0.6);
+        }
+
+        .btn-3d.green {
+            background: linear-gradient(180deg, #2ec4b6 0%, #0f9f90 100%);
+            box-shadow: 0 6px 0 #08635a, 0 8px 15px rgba(0,0,0,0.35), inset 0 2px 2px rgba(255,255,255,0.45);
+        }
+        .btn-3d.green:active {
+            box-shadow: 0 2px 0 #08635a, 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .btn-3d.orange {
+            background: linear-gradient(180deg, #ff9f1c 0%, #f77f00 100%);
+            box-shadow: 0 6px 0 #9c4f00, 0 8px 15px rgba(0,0,0,0.35), inset 0 2px 2px rgba(255,255,255,0.45);
+        }
+        .btn-3d.orange:active {
+            box-shadow: 0 2px 0 #9c4f00, 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .btn-3d.red {
+            background: linear-gradient(180deg, #ff4d6d 0%, #c9184a 100%);
+            box-shadow: 0 6px 0 #800f2f, 0 8px 15px rgba(0,0,0,0.35), inset 0 2px 2px rgba(255,255,255,0.45);
+        }
+        .btn-3d.red:active {
+            box-shadow: 0 2px 0 #800f2f, 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .btn-3d.purple {
+            background: linear-gradient(180deg, #9b5de5 0%, #6a1b9a 100%);
+            box-shadow: 0 6px 0 #3c096c, 0 8px 15px rgba(0,0,0,0.35), inset 0 2px 2px rgba(255,255,255,0.45);
+        }
+        .btn-3d.purple:active {
+            box-shadow: 0 2px 0 #3c096c, 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .utility-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn-3d {
+            width: 46px;
+            height: 46px;
+            padding: 0;
+            border-radius: 12px;
+            font-size: 20px;
+        }
+
+        /* ==========================================================================
+           SISTEM SLIDE (6 SLIDE TERSTRUKTUR)
+           ========================================================================== */
+        .slide-container {
+            position: absolute;
+            top: 104px;
+            left: 24px;
+            right: 24px;
+            bottom: 20px;
+            z-index: 10;
+            display: none;
+            animation: slideFadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .slide-container.active {
+            display: flex;
+        }
+
+        @keyframes slideFadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.99); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Panel Kaca 3D (Glassmorphism + Depth) */
+        .lab-panel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(241, 245, 249, 0.96) 100%);
+            border-radius: 22px;
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 18px 35px rgba(0, 0, 0, 0.35), inset 0 2px 0 #ffffff;
+            color: var(--text-dark);
+            padding: 22px;
+            position: relative;
+        }
+
+        .lab-panel-dark {
+            background: linear-gradient(180deg, rgba(20, 33, 61, 0.92) 0%, rgba(11, 19, 43, 0.95) 100%);
+            border-radius: 22px;
+            border: 2px solid rgba(144, 224, 239, 0.35);
+            box-shadow: 0 18px 35px rgba(0, 0, 0, 0.45), inset 0 2px 3px rgba(255,255,255,0.15);
+            color: #ffffff;
+            padding: 22px;
+            position: relative;
+        }
+
+        /* ==========================================================================
+           SLIDE 1: LAMAN PEMBUKA (HERO 3D)
+           ========================================================================== */
+        .hero-layout {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 28px;
+            align-items: center;
+            padding: 10px 20px;
+        }
+
+        .hero-card {
+            padding: 36px 40px;
+            border-radius: 28px;
+            background: linear-gradient(145deg, rgba(19, 42, 74, 0.94), rgba(10, 22, 42, 0.96));
+            border: 3px solid rgba(72, 202, 228, 0.45);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.55), inset 0 2px 4px rgba(255,255,255,0.25);
+            color: #fff;
+        }
+
+        .title-banner {
+            display: block;
+            width: min(100%, 1000px);
+            max-width: 100%;
+            height: auto;
+            margin: 0 auto 20px;
+            border-radius: 18px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            animation: titlePulse 3.5s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.18));
+            }
+            50% {
+                transform: scale(1.03);
+                filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.22));
+            }
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(90deg, #f77f00, #fcbf49);
+            color: #1d2d44;
+            font-weight: 800;
+            font-size: 14px;
+            padding: 6px 16px;
+            border-radius: 999px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(247, 127, 0, 0.4);
+        }
+
+        .hero-card h2 {
+            font-size: 46px;
+            line-height: 1.12;
+            font-weight: 900;
+            margin-bottom: 16px;
+            background: linear-gradient(90deg, #ffffff, #90e0ef, #ffd166);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-card p {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            margin-bottom: 24px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .feature-item {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.16);
+            border-radius: 16px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .feature-item strong {
+            display: block;
+            color: #ffd166;
+            font-size: 16px;
+            margin-top: 6px;
+        }
+
+        .feature-item span {
+            font-size: 13px;
+            color: #e2e8f0;
+        }
+
+        .hero-showcase {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* ==========================================================================
+           SLIDE 2: PANDUAN & KESELAMATAN LAB
+           ========================================================================== */
+        .guide-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            width: 100%;
+            margin-top: 16px;
+            place-items: center;
+        }
+
+        .guide-flow-image {
+            display: block;
+            width: min(130%, 1100px);
+            height: auto;
+            max-height: 546px;
+            object-fit: contain;
+            border-radius: 20px;
+            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+            border: 3px solid #cbd5e1;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+            padding: 12px;
+            margin: -13px auto 0;
+        }
+
+        /* ==========================================================================
+           SLIDE 3: MATERI TEORI WARNA INTERAKTIF (ADAPTASI MIXTOMATCH)
+           ========================================================================== */
+        .theory-layout {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 22px;
+        }
+
+        .theory-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .theory-topic-btn {
+            text-align: left;
+            padding: 16px 18px;
+            border-radius: 16px;
+            border: 2px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .theory-topic-btn:hover {
+            background: rgba(255,255,255,0.16);
+        }
+
+        .theory-topic-btn.active {
+            background: linear-gradient(90deg, #00b4d8, #0077b6);
+            border-color: #90e0ef;
+            box-shadow: 0 8px 20px rgba(0, 180, 216, 0.4);
+            transform: translateX(6px);
+        }
+
+        .theory-content-box {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            background: url("assets/latar2.jpeg") center center / cover no-repeat;
+        }
+
+        .theory-tab-pane {
+            display: none;
+            height: 100%;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .theory-tab-pane.active {
+            display: grid;
+        }
+
+        /* ==========================================================================
+           SLIDE 4 & 5: MEJA KERJA SIMULASI & TANTANGAN 3D
+           ========================================================================== */
+        .workbench-layout {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 365px minmax(0, 1fr) 375px;
+            gap: 18px;
+            align-items: stretch;
+            min-height: 0;
+        }
+
+        .workbench-layout > * {
+            min-height: 0;
+            max-height: 100%;
+        }
+
+        .workbench-center-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            height: 100%;
+            min-height: 0;
+            padding-bottom: 6px;
+        }
+
+        /* Rak Dispenser Botol Pipet 3D */
+        .dispenser-rack {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.88) 0%, rgba(30, 41, 59, 0.94) 100%);
+            padding: 10px 12px;
+            border-radius: 18px;
+            border: 2px solid rgba(255,255,255,0.22);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.38);
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        .bottle-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 14px;
+            padding: 6px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+            position: relative;
+        }
+
+        .bottle-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255,255,255,0.65);
+            background: rgba(255,255,255,0.18);
+        }
+
+        .bottle-card:active {
+            transform: translateY(2px) scale(0.97);
+        }
+
+        .bottle-count-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: #0f172a;
+            color: #fff;
+            font-weight: 800;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        .bottle-name {
+            color: #fff;
+            font-weight: 800;
+            font-size: 12.5px;
+            margin-top: 2px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .bottle-sub {
+            font-size: 10.5px;
+            color: #cbd5e1;
+        }
+
+        /* Kontrol Tambah/Kurang Tetes */
+        .drop-stepper {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .mini-step-btn {
+            width: 28px;
+            height: 24px;
+            border-radius: 7px;
+            border: none;
+            font-weight: 900;
+            font-size: 15px;
+            cursor: pointer;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+        }
+        .mini-step-btn.plus { background: #10b981; }
+        .mini-step-btn.minus { background: #ef4444; }
+        .mini-step-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        /* Rak Tabung Sampel Tersimpan */
+        .sample-rack {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .sample-tube-slot {
+            background: rgba(15, 23, 42, 0.07);
+            border: 2px dashed #94a3b8;
+            border-radius: 12px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 88px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sample-tube-slot.filled {
+            border-style: solid;
+            border-color: #64748b;
+            background: #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        .sample-tube-slot.filled:hover {
+            transform: scale(1.03);
+            border-color: #00b4d8;
+        }
+
+        /* Bar Persentase Komposisi */
+        .recipe-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .recipe-progress-track {
+            flex: 1;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .recipe-progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+
+        /* ==========================================================================
+           SLIDE 5: LEVEL SELECTOR & INDIKATOR KEMIRIPAN
+           ========================================================================== */
+        .level-pills {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .level-btn {
+            padding: 6px 4px;
+            border-radius: 10px;
+            border: 2px solid #cbd5e1;
+            background: #f8fafc;
+            font-weight: 800;
+            font-size: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+
+        .level-btn.active {
+            background: linear-gradient(180deg, #3a86ff, #00509d);
+            color: #fff;
+            border-color: #00296b;
+            box-shadow: 0 4px 10px rgba(58, 134, 255, 0.35);
+        }
+
+        .level-btn.completed {
+            border-color: #10b981;
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .level-btn.completed.active {
+            background: linear-gradient(180deg, #10b981, #059669);
+            color: #fff;
+        }
+
+        .accuracy-meter-box {
+            background: #0f172a;
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 16px;
+            text-align: center;
+            border: 2px solid #334155;
+            margin-top: 8px;
+        }
+
+        /* Rak Dispenser Botol Pipet 3D */
+        .dispenser-rack {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.92) 100%);
+            padding: 14px;
+            border-radius: 20px;
+            border: 2px solid rgba(255,255,255,0.22);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.4);
+        }
+
+        .bottle-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 10px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+            position: relative;
+        }
+
+        .bottle-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255,255,255,0.65);
+            background: rgba(255,255,255,0.18);
+        }
+
+        .bottle-card:active {
+            transform: translateY(2px) scale(0.97);
+        }
+
+        .bottle-count-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            min-width: 26px;
+            height: 26px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #0f172a;
+            color: #fff;
+            font-weight: 800;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        .bottle-name {
+            color: #fff;
+            font-weight: 800;
+            font-size: 13px;
+            margin-top: 6px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .bottle-sub {
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
+        /* Kontrol Tambah/Kurang Tetes */
+        .drop-stepper {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .mini-step-btn {
+            width: 30px;
+            height: 28px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 900;
+            font-size: 16px;
+            cursor: pointer;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.4);
+        }
+        .mini-step-btn.plus { background: #10b981; }
+        .mini-step-btn.minus { background: #ef4444; }
+        .mini-step-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        /* Rak Tabung Sampel Tersimpan */
+        .sample-rack {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .sample-tube-slot {
+            background: rgba(15, 23, 42, 0.07);
+            border: 2px dashed #94a3b8;
+            border-radius: 14px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 110px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sample-tube-slot.filled {
+            border-style: solid;
+            border-color: #64748b;
+            background: #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        .sample-tube-slot.filled:hover {
+            transform: scale(1.03);
+            border-color: #00b4d8;
+        }
+
+        /* Bar Persentase Komposisi */
+        .recipe-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .recipe-progress-track {
+            flex: 1;
+            height: 14px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .recipe-progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+
+        /* ==========================================================================
+           SLIDE 5: LEVEL SELECTOR & INDIKATOR KEMIRIPAN
+           ========================================================================== */
+        .level-pills {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .level-btn {
+            padding: 8px 4px;
+            border-radius: 12px;
+            border: 2px solid #cbd5e1;
+            background: #f8fafc;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+
+        .level-btn.active {
+            background: linear-gradient(180deg, #3a86ff, #00509d);
+            color: #fff;
+            border-color: #00296b;
+            box-shadow: 0 4px 10px rgba(58, 134, 255, 0.35);
+        }
+
+        .level-btn.completed {
+            border-color: #10b981;
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .level-btn.completed.active {
+            background: linear-gradient(180deg, #10b981, #059669);
+            color: #fff;
+        }
+
+        .accuracy-meter-box {
+            background: #0f172a;
+            color: #fff;
+            padding: 16px;
+            border-radius: 18px;
+            text-align: center;
+            border: 2px solid #334155;
+            margin-top: 10px;
+        }
+
+        /* ==========================================================================
+           SLIDE 6: KUIS EVALUASI & RAPOR
+           ========================================================================== */
+        .quiz-option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 16px 20px;
+            border-radius: 16px;
+            border: 3px solid #cbd5e1;
+            background: #ffffff;
+            font-size: 17px;
+            font-weight: 700;
+            color: #1e293b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 0 #cbd5e1;
+        }
+
+        .quiz-option-btn:hover:not(:disabled) {
+            border-color: #3a86ff;
+            background: #f0f9ff;
+            transform: translateY(-2px);
+        }
+
+        .quiz-option-btn.correct {
+            border-color: #10b981;
+            background: #d1fae5;
+            color: #065f46;
+            box-shadow: 0 4px 0 #059669;
+        }
+
+        .quiz-option-btn.wrong {
+            border-color: #ef4444;
+            background: #fee2e2;
+            color: #991b1b;
+            box-shadow: 0 4px 0 #b91c1c;
+        }
+
+        /* ==========================================================================
+           MODAL NOTIFIKASI CUSTOM (PENGGANTI ALERT)
+           ========================================================================== */
+        #custom-modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(9, 13, 22, 0.78);
+            backdrop-filter: blur(6px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #custom-modal-overlay.show {
+            display: flex;
+            animation: slideFadeIn 0.25s ease;
+        }
+
+        .modal-card-3d {
+            width: 540px;
+            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+            border-radius: 26px;
+            border: 4px solid #ffffff;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.65);
+            padding: 30px;
+            text-align: center;
+            color: #1e293b;
+        }
+
+        .info-modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(9, 13, 22, 0.72);
+            backdrop-filter: blur(6px);
+            z-index: 210;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-modal-overlay.show {
+            display: flex;
+            animation: slideFadeIn 0.25s ease;
+        }
+
+        .info-modal-card {
+            width: min(900px, calc(100% - 40px));
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 24px;
+            border: 3px solid rgba(255,255,255,0.7);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.65);
+            padding: 28px 30px 22px;
+            color: #0f172a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-modal-body {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .info-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .info-modal-title {
+            font-size: clamp(24px, 2vw, 32px);
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .info-modal-content {
+            background: linear-gradient(180deg, #f8fafc 0%, #eef6ff 100%);
+            border: 2px solid #dbeafe;
+            border-radius: 18px;
+            padding: 22px 24px;
+            font-size: clamp(15px, 1.2vw, 18px);
+            line-height: 1.7;
+            color: #334155;
+            overflow: auto;
+        }
+
+        .swatch-compare-row {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin: 18px 0;
+        }
+
+        .swatch-circle-3d {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25), inset 0 6px 12px rgba(255,255,255,0.45), inset 0 -6px 12px rgba(0,0,0,0.25);
+        }
+
+        /* Slider Kustom untuk Teori Tint/Tone/Shade */
+        input[type="range"].lab-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 14px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            outline: none;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input[type="range"].lab-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #00b4d8, #0077b6);
+            border: 3px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- STAGE UTAMA 16:9 (1600 x 900) -->
+    <div id="stage-wrapper">
+
+        <!-- DEKORASI RUANG LABORATORIUM 3D -->
+        <div class="lab-bg-decor">
+            <div class="lab-wall-grid"></div>
+            <div class="lab-shelf"></div>
+            <div class="lab-bench-surface"></div>
+            <div class="lab-bench-front"></div>
+        </div>
+
+        <!-- HEADER NAVIGASI ATAS -->
+        <header class="top-navbar">
+            <div class="brand-box">
+                <div class="brand-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 3H15M10 3V8.5L4.8 17.2C4.1 18.4 4.9 20 6.3 20H17.7C19.1 20 19.9 18.4 19.2 17.2L14 8.5V3" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6.8 15H17.2L18.5 17.3C18.9 18 18.4 19 17.5 19H6.5C5.6 19 5.1 18 5.5 17.3L6.8 15Z" fill="#ffd166"/>
+                        <circle cx="11" cy="17" r="1" fill="#ef476f"/>
+                        <circle cx="14" cy="16.5" r="1.2" fill="#06d6a0"/>
+                    </svg>
+                </div>
+                <div class="brand-title">
+                    <h1>Selamat Datang di Lab Maya</h1>
+                    <span>Ayo jelajahi dunia warna yang menyenangkan</span>
+                </div>
+            </div>
+
+            <nav class="nav-tabs" aria-label="Menu Slide Laboratorium">
+                <button class="btn-3d active-tab" onclick="switchSlide(1)" id="nav-btn-1">1. Beranda</button>
+                <button class="btn-3d" onclick="switchSlide(2)" id="nav-btn-2">2. Panduan</button>
+                <button class="btn-3d" onclick="switchSlide(3)" id="nav-btn-3">3. Teori Warna</button>
+                <button class="btn-3d" onclick="switchSlide(4)" id="nav-btn-4">4. Lab Eksplorasi</button>
+                <button class="btn-3d" onclick="switchSlide(5)" id="nav-btn-5">5. Tantangan Lab</button>
+                <button class="btn-3d" onclick="switchSlide(6)" id="nav-btn-6">6. Kuis & Rapor</button>
+            </nav>
+
+            <div class="utility-controls">
+                <button class="btn-3d icon-btn-3d green" id="btn-sound-toggle" onclick="toggleSound()" title="Suara Efek Aktif/Nonaktif">
+                    🔊
+                </button>
+            </div>
+        </header>
+
+        <!-- =======================================================================
+             SLIDE 1: LAMAN PEMBUKA (BERANDA LABORATORIUM)
+             ======================================================================= -->
+        <section class="slide-container active" id="slide-1">
+            <div class="hero-layout">
+                <div class="hero-card">
+                    <img src="assets/judul.png" alt="Judul Laboratorium Maya" class="title-banner">
+                    <div class="feature-grid">
+                        <div class="feature-item">
+                            <div style="font-size: 28px;">🎨</div>
+                            <strong>Teori Pigmen</strong>
+                            <span>Primer, Sekunder, Tersier, Tint, Tone & Shade</span>
+                        </div>
+                        <div class="feature-item">
+                            <div style="font-size: 28px;">🧪</div>
+                            <strong>Simulasi 3D Realistik</strong>
+                            <span>Teteskan pipet & aduk larutan pewarna basah</span>
+                        </div>
+                        <div class="feature-item">
+                            <div style="font-size: 28px;">🏆</div>
+                            <strong>10 Misi & Kuis</strong>
+                            <span>Tantangan meracik warna target & evaluasi</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                        <button class="btn-3d orange" style="font-size: 20px; padding: 16px 32px;" onclick="switchSlide(2)">
+                            🚀 Mulai Masuk Laboratorium
+                        </button>
+                        <button class="btn-3d green" style="font-size: 18px; padding: 16px 26px;" onclick="switchSlide(4)">
+                            🧪 Langsung ke Meja Simulasi
+                        </button>
+                        <button class="btn-3d blue" style="width: 52px; height: 52px; min-width: 52px; padding: 0; border-radius: 50%; font-size: 28px; font-weight: 900; line-height: 1; display: inline-flex; align-items: center; justify-content: center;" onclick="openInfoModal()" title="Informasi">
+                            i
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Showcase Visual 3D Interaktif di Beranda -->
+                <div class="hero-showcase">
+                    <canvas id="hero-canvas" width="600" height="580" style="cursor: pointer;" onclick="triggerHeroSplash()"></canvas>
+                    <div style="background: rgba(15, 23, 42, 0.85); color: #90e0ef; padding: 8px 20px; border-radius: 999px; font-weight: 700; font-size: 14px; border: 1px solid rgba(144,224,239,0.4); margin-top: -10px;">
+                        👆 Ketuk / Klik Gelas Kimia 3D di atas untuk meneteskan pewarna!
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =======================================================================
+             SLIDE 2: PANDUAN & PETUNJUK PENGGUNAAN LABORATORIUM
+             ======================================================================= -->
+        <section class="slide-container" id="slide-2">
+            <div class="lab-panel" style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 14px;">
+                    <div>
+                        <span class="badge-pill" style="margin-bottom: 6px;">📋 PANDUAN LABORATORIUM</span>
+                        <h2 style="font-size: 30px; color: #0f172a; font-weight: 900;">Cara Menggunakan Laboratorium Pewarna Basah</h2>
+                    </div>
+                    <div style="background: #e0f2fe; border: 2px solid #38bdf8; color: #0369a1; padding: 10px 18px; border-radius: 14px; font-weight: 700; font-size: 15px;">
+                        💡 Lab maya ini dapat digunakan dengan <strong>layar sentuh</strong> & <strong>Kursor Mouse (Klik)</strong>
+                    </div>
+                </div>
+
+                <div class="guide-grid">
+                    <img class="guide-flow-image" src="assets/alur.png" alt="Alur penggunaan laboratorium" />
+                </div>
+
+                <!-- Kotak Tips Ilmiah Kelas V & VI -->
+                <div style="background: linear-gradient(90deg, #1e293b, #0f172a); color: #fff; border-radius: 18px; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="font-size: 38px;">🧑‍🔬</div>
+                        <div>
+                            <strong style="color: #ffd166; font-size: 17px; display: block;">Catatan Penting Ilmuwan Cilik:</strong>
+                            <span style="font-size: 15px; color: #e2e8f0;">
+                                Pencampuran pewarna basah (cat air, tinta, pewarna makanan) bersifat <strong>Subtraktif (Pigmen)</strong>: pencampuran <strong>Merah + Kuning = Oranye</strong>, <strong>Kuning + Biru = Hijau</strong>, dan <strong>Merah + Biru = Ungu</strong>!
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-3d" onclick="switchSlide(1)">⬅ Beranda</button>
+                        <button class="btn-3d green" style="font-size: 17px; padding: 12px 24px;" onclick="switchSlide(3)">Lanjut ke Teori Warna ➡</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =======================================================================
+             SLIDE 3: MATERI TEORI WARNA INTERAKTIF (ADAPTASI MIXTOMATCH.ORG)
+             ======================================================================= -->
+        <section class="slide-container" id="slide-3">
+            <div class="theory-layout">
+                <!-- Sidebar Navigasi Bab Teori -->
+                <div class="lab-panel-dark theory-sidebar">
+                    <span class="badge-pill" style="align-self: flex-start;">📚 MODUL BELAJAR</span>
+                    <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 6px;">Teori Pewarna Basah</h2>
+                    <p style="font-size: 14px; color: #cbd5e1; margin-bottom: 10px;">
+                        Pilih topik di bawah ini untuk mencoba simulasi konsep teori warna:
+                    </p>
+
+                    <button class="theory-topic-btn active" id="theory-btn-1" onclick="switchTheoryTab(1)">
+                        <span style="font-size: 28px;">🎡</span>
+                        <div>
+                            <strong style="font-size: 16px; display: block;">1. Roda Warna & Kelompok</strong>
+                            <span style="font-size: 12px; color: #cbd5e1;">Primer, Sekunder, dan Tersier</span>
+                        </div>
+                    </button>
+
+                    <button class="theory-topic-btn" id="theory-btn-2" onclick="switchTheoryTab(2)">
+                        <span style="font-size: 28px;">🧪</span>
+                        <div>
+                            <strong style="font-size: 16px; display: block;">2. Hue, Tint, Tone & Shade</strong>
+                            <span style="font-size: 12px; color: #cbd5e1;">Peran Pewarna Putih & Hitam</span>
+                        </div>
+                    </button>
+
+                    <button class="theory-topic-btn" id="theory-btn-3" onclick="switchTheoryTab(3)">
+                        <span style="font-size: 28px;">🌡️</span>
+                        <div>
+                            <strong style="font-size: 16px; display: block;">3. Suhu & Harmoni Warna</strong>
+                            <span style="font-size: 12px; color: #cbd5e1;">Warna Hangat, Dingin & Komplementer</span>
+                        </div>
+                    </button>
+
+                    <div style="margin-top: auto; background: rgba(255,255,255,0.08); padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.15);">
+                        <div style="font-size: 13px; color: #90e0ef; font-weight: 700; margin-bottom: 8px;">Sudah paham teorinya?</div>
+                        <button class="btn-3d orange" style="width: 100%;" onclick="switchSlide(4)">
+                            🧪 Praktik di Lab Eksplorasi ➡
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Area Konten Interaktif Teori -->
+                <div class="lab-panel theory-content-box">
+                    <!-- TAB 1: RODA WARNA PRIMER, SEKUNDER, TERSIER -->
+                    <div class="theory-tab-pane active" id="theory-pane-1">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <canvas id="wheel-canvas" width="440" height="440" style="cursor: pointer;"></canvas>
+                            <div style="font-size: 14px; font-weight: 700; color: #334155; margin-top: 6px;">
+                                👆 Ketuk/Klik salah satu segmen pada Roda Warna 3D di atas!
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 14px;">
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn-3d" style="padding: 8px 14px; font-size: 14px;" onclick="filterWheelHighlight('all')">Semua (12)</button>
+                                <button class="btn-3d red" style="padding: 8px 14px; font-size: 14px;" onclick="filterWheelHighlight('Primer')">Warna Primer (3)</button>
+                                <button class="btn-3d green" style="padding: 8px 14px; font-size: 14px;" onclick="filterWheelHighlight('Sekunder')">Warna Sekunder (3)</button>
+                                <button class="btn-3d purple" style="padding: 8px 14px; font-size: 14px;" onclick="filterWheelHighlight('Tersier')">Warna Tersier (6)</button>
+                            </div>
+
+                            <!-- Kartu Detail Segmen Roda Warna -->
+                            <div id="wheel-info-card" style="background: #f8fafc; border: 3px solid #cbd5e1; border-radius: 20px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.06);">
+                                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 14px;">
+                                    <div id="wheel-selected-swatch" style="width: 68px; height: 68px; border-radius: 18px; background: #e6232d; border: 4px solid #fff; box-shadow: 0 6px 14px rgba(0,0,0,0.2);"></div>
+                                    <div>
+                                        <span id="wheel-selected-cat" style="background: #0f172a; color: #ffd166; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800;">WARNA PRIMER</span>
+                                        <h3 id="wheel-selected-name" style="font-size: 26px; font-weight: 900; color: #0f172a; margin-top: 4px;">Merah (Red)</h3>
+                                    </div>
+                                </div>
+                                <p id="wheel-selected-desc" style="font-size: 16px; line-height: 1.55; color: #334155; margin-bottom: 14px;">
+                                    Warna Primer adalah warna dasar biang pewarna basah yang tidak dapat dibuat dari campuran warna lain.
+                                </p>
+                                <div style="background: #e2e8f0; padding: 12px 16px; border-radius: 12px; font-weight: 800; font-size: 15px; color: #1e293b;">
+                                    🧪 Rumus Tetesan Dasar: <span id="wheel-selected-formula" style="color: #0284c7;">1 Tetes Merah Murni</span>
+                                </div>
+                            </div>
+
+                            <div style="background: #fffbeb; border: 2px solid #fde68a; border-radius: 16px; padding: 14px 18px; font-size: 14px; color: #92400e; line-height: 1.5;">
+                                <strong>Ringkasan Konsep:</strong><br>
+                                • <strong>Primer (3):</strong> Merah, Kuning, Biru (Warna biang utama).<br>
+                                • <strong>Sekunder (3):</strong> Oranye (M+K), Hijau (K+B), Ungu (B+M).<br>
+                                • <strong>Tersier (6):</strong> Campuran 1 warna Primer + 1 warna Sekunder di sebelahnya.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: HUE, TINT, TONE & SHADE -->
+                    <div class="theory-tab-pane" id="theory-pane-2">
+                        <div style="display: flex; flex-direction: column; gap: 14px;">
+                            <span class="badge-pill" style="align-self: flex-start;">🔬 EKSPERIMEN GELAP-TERANG WARNA</span>
+                            <h3 style="font-size: 26px; font-weight: 900; color: #0f172a;">Apa itu Hue, Tint, Tone, dan Shade?</h3>
+                            <p style="font-size: 15px; color: #334155; line-height: 1.5;">
+                                Dalam laboratorium pewarna basah, kita menggunakan pewarna <strong>Putih</strong> dan <strong>Hitam</strong> untuk mengatur kecerahan dan kepekatan warna murni (<em>Hue</em>):
+                            </p>
+
+                            <!-- Kontrol Interaktif Pilihan Rona (Hue) -->
+                            <div style="background: #f1f5f9; padding: 14px; border-radius: 16px; border: 2px solid #cbd5e1;">
+                                <label style="font-weight: 800; font-size: 14px; display: block; margin-bottom: 8px;">1. Pilih Rona Warna Murni (Hue):</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <button class="btn-3d red" style="padding: 8px 14px; font-size: 13px;" onclick="setTTSHue(0)">Merah</button>
+                                    <button class="btn-3d orange" style="padding: 8px 14px; font-size: 13px;" onclick="setTTSHue(1)">Oranye</button>
+                                    <button class="btn-3d" style="background: #eab308; padding: 8px 14px; font-size: 13px;" onclick="setTTSHue(2)">Kuning</button>
+                                    <button class="btn-3d green" style="padding: 8px 14px; font-size: 13px;" onclick="setTTSHue(3)">Hijau</button>
+                                    <button class="btn-3d" style="padding: 8px 14px; font-size: 13px;" onclick="setTTSHue(4)">Biru</button>
+                                    <button class="btn-3d purple" style="padding: 8px 14px; font-size: 13px;" onclick="setTTSHue(5)">Ungu</button>
+                                </div>
+
+                                <div style="margin-top: 14px;">
+                                    <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; margin-bottom: 6px;">
+                                        <span>⚪ Tambahan Tetes Putih (Tint):</span>
+                                        <span id="tts-white-val">0%</span>
+                                    </div>
+                                    <input type="range" class="lab-slider" id="tts-white-slider" min="0" max="100" value="0" oninput="updateTTSSimulator()">
+                                </div>
+
+                                <div style="margin-top: 12px;">
+                                    <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; margin-bottom: 6px;">
+                                        <span>⚫ Tambahan Tetes Hitam (Shade):</span>
+                                        <span id="tts-black-val">0%</span>
+                                    </div>
+                                    <input type="range" class="lab-slider" id="tts-black-slider" min="0" max="100" value="0" oninput="updateTTSSimulator()">
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px;">
+                                <div style="background: #f8fafc; padding: 10px; border-radius: 12px; border-left: 5px solid #ef4444;">
+                                    <strong>HUE (Rona Murni):</strong> Warna asli tanpa campuran Putih/Hitam.
+                                </div>
+                                <div style="background: #f8fafc; padding: 10px; border-radius: 12px; border-left: 5px solid #38bdf8;">
+                                    <strong>TINT (+ Putih):</strong> Warna menjadi lebih muda/pastel/terang.
+                                </div>
+                                <div style="background: #f8fafc; padding: 10px; border-radius: 12px; border-left: 5px solid #94a3b8;">
+                                    <strong>TONE (+ Abu-abu / Putih+Hitam):</strong> Warna menjadi lebih kalem/redup.
+                                </div>
+                                <div style="background: #f8fafc; padding: 10px; border-radius: 12px; border-left: 5px solid #1e293b;">
+                                    <strong>SHADE (+ Hitam):</strong> Warna menjadi lebih tua/gelap.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Visualisasi 4 Tabung Reaksi 3D (Hue, Tint, Tone, Shade) -->
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <canvas id="tts-canvas" width="520" height="430"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: SUHU WARNA & HARMONI KOMPLEMENTER -->
+                    <div class="theory-tab-pane" id="theory-pane-3">
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <span class="badge-pill" style="align-self: flex-start;">🌡️ SUHU & PASANGAN WARNA</span>
+                            <h3 style="font-size: 26px; font-weight: 900; color: #0f172a;">Warna Hangat, Dingin & Komplementer</h3>
+
+                            <div style="background: linear-gradient(90deg, #fff1f2, #fffbeb); border: 2px solid #fda4af; border-radius: 16px; padding: 16px;">
+                                <h4 style="color: #be123c; font-size: 18px; margin-bottom: 6px;">☀️ Kelompok Warna Hangat (Warm Colors)</h4>
+                                <p style="font-size: 15px; color: #4c0519; line-height: 1.5;">
+                                    Keluarga warna <strong>Merah, Oranye, dan Kuning</strong>. Memberikan kesan semangat, hangat seperti api dan sinar matahari, serta tampak lebih dekat di mata.
+                                </p>
+                            </div>
+
+                            <div style="background: linear-gradient(90deg, #f0fdf4, #eff6ff); border: 2px solid #93c5fd; border-radius: 16px; padding: 16px;">
+                                <h4 style="color: #1d4ed8; font-size: 18px; margin-bottom: 6px;">❄️ Kelompok Warna Dingin (Cool Colors)</h4>
+                                <p style="font-size: 15px; color: #1e3a8a; line-height: 1.5;">
+                                    Keluarga warna <strong>Hijau, Biru, dan Ungu</strong>. Memberikan kesan sejuk seperti air, es, dan pepohonan, serta menenangkan.
+                                </p>
+                            </div>
+
+                            <div style="background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 16px; padding: 16px;">
+                                <h4 style="color: #0f172a; font-size: 18px; margin-bottom: 6px;">🔄 Warna Komplementer (Saling Berhadapan)</h4>
+                                <p style="font-size: 14px; color: #334155; line-height: 1.5;">
+                                    Dua warna yang letaknya saling berseberangan di Roda Warna (contoh: <strong>Merah ↔ Hijau</strong>, <strong>Kuning ↔ Ungu</strong>, <strong>Biru ↔ Oranye</strong>). Jika diletakkan berdampingan tampak sangat kontras, namun jika dicampur dalam pewarna basah akan menghasilkan warna <strong>Cokelat Netral / Gelap</strong>!
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Simulator Interaktif Pasangan Komplementer -->
+                        <div style="background: #0f172a; color: #fff; border-radius: 22px; padding: 24px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+                            <h4 style="font-size: 20px; color: #ffd166;">Uji Reaksi Pasangan Komplementer</h4>
+                            <p style="font-size: 14px; color: #cbd5e1;">Klik pasangan warna berseberangan di bawah ini untuk melihat hasil percampuran cairan pewarnanya:</p>
+
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <button class="btn-3d" style="background: linear-gradient(90deg, #e6232d 0%, #1eaf4b 100%);" onclick="showComplementDemo(0)">
+                                    Merah + Hijau = Cokelat Tua Bumi
+                                </button>
+                                <button class="btn-3d" style="background: linear-gradient(90deg, #fcd70f 0%, #8728af 100%); color: #fff; text-shadow: 0 1px 3px #000;" onclick="showComplementDemo(1)">
+                                    Kuning + Ungu = Cokelat Karamel Redup
+                                </button>
+                                <button class="btn-3d" style="background: linear-gradient(90deg, #145fe1 0%, #f8780f 100%);" onclick="showComplementDemo(2)">
+                                    Biru + Oranye = Cokelat Batu / Abu Kecokelatan
+                                </button>
+                            </div>
+
+                            <div id="complement-result-box" style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; border: 1px solid rgba(255,255,255,0.2);">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 10px;">
+                                    <div id="comp-sw-1" style="width: 52px; height: 52px; border-radius: 50%; background: #e6232d; border: 3px solid #fff;"></div>
+                                    <span style="font-size: 22px; font-weight: 900;">+</span>
+                                    <div id="comp-sw-2" style="width: 52px; height: 52px; border-radius: 50%; background: #1eaf4b; border: 3px solid #fff;"></div>
+                                    <span style="font-size: 22px; font-weight: 900;">=</span>
+                                    <div id="comp-sw-res" style="width: 64px; height: 64px; border-radius: 50%; background: #5f4b41; border: 4px solid #ffd166; box-shadow: 0 0 15px rgba(255,209,102,0.5);"></div>
+                                </div>
+                                <div id="comp-text-desc" style="font-size: 14px; color: #f1f5f9;">
+                                    Merah + Hijau (yang sebenarnya mengandung Kuning + Biru) berarti menyatukan ketiga warna primer sehingga menjadi <strong>Cokelat Tua</strong>!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =======================================================================
+             SLIDE 4: SIMULASI EKSPLORASI BEBAS (ADAPTASI TOYTHEATER COLOR MIXER)
+             ======================================================================= -->
+        <section class="slide-container" id="slide-4">
+            <div class="workbench-layout">
+                <!-- PANEL KIRI: DATA RUMUS CAMPURAN & RESEP CEPAT -->
+                <div class="lab-panel" style="display: flex; flex-direction: column; justify-content: space-between; padding: 16px 18px;">
+                    <div>
+                        <span class="badge-pill" style="margin-bottom: 4px; font-size: 12px; padding: 4px 12px;">📊 ANALISIS LARUTAN</span>
+                        <h3 style="font-size: 20px; font-weight: 900; color: #0f172a; margin-bottom: 10px;">Komposisi Tetesan Pewarna</h3>
+
+                        <!-- Indikator Warna Hasil Sekarang -->
+                        <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 10px; border-radius: 14px; border: 2px solid #cbd5e1; margin-bottom: 10px;">
+                            <div id="free-current-swatch" style="width: 54px; height: 54px; flex-shrink: 0; border-radius: 14px; background: #e2e8f0; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.18);"></div>
+                            <div>
+                                <div style="font-size: 11px; font-weight: 800; color: #64748b;">HASIL WARNA LARUTAN:</div>
+                                <div id="free-color-name" style="font-size: 17px; font-weight: 900; color: #0f172a; line-height: 1.2;">Air Jernih (0 Tetes)</div>
+                                <div id="free-color-cat" style="font-size: 12px; font-weight: 700; color: #0284c7; margin-top: 2px;">Gelas Kimia Kosong</div>
+                            </div>
+                        </div>
+
+                        <!-- Grafik Bar Komposisi 5 Warna -->
+                        <div style="background: #f1f5f9; padding: 12px; border-radius: 14px; border: 1px solid #cbd5e1;">
+                            <div class="recipe-bar-row">
+                                <span style="width: 68px; color: #dc2626;">🔴 Merah</span>
+                                <div class="recipe-progress-track"><div id="bar-free-R" class="recipe-progress-fill" style="width: 0%; background: #e6232d;"></div></div>
+                                <span id="pct-free-R" style="width: 48px; text-align: right; font-size: 12px;">0 (0%)</span>
+                            </div>
+                            <div class="recipe-bar-row">
+                                <span style="width: 68px; color: #ca8a04;">🟡 Kuning</span>
+                                <div class="recipe-progress-track"><div id="bar-free-Y" class="recipe-progress-fill" style="width: 0%; background: #facc15;"></div></div>
+                                <span id="pct-free-Y" style="width: 48px; text-align: right; font-size: 12px;">0 (0%)</span>
+                            </div>
+                            <div class="recipe-bar-row">
+                                <span style="width: 68px; color: #2563eb;">🔵 Biru</span>
+                                <div class="recipe-progress-track"><div id="bar-free-B" class="recipe-progress-fill" style="width: 0%; background: #145fe1;"></div></div>
+                                <span id="pct-free-B" style="width: 48px; text-align: right; font-size: 12px;">0 (0%)</span>
+                            </div>
+                            <div class="recipe-bar-row">
+                                <span style="width: 68px; color: #475569;">⚪ Putih</span>
+                                <div class="recipe-progress-track"><div id="bar-free-W" class="recipe-progress-fill" style="width: 0%; background: #94a3b8;"></div></div>
+                                <span id="pct-free-W" style="width: 48px; text-align: right; font-size: 12px;">0 (0%)</span>
+                            </div>
+                            <div class="recipe-bar-row" style="margin-bottom: 0;">
+                                <span style="width: 68px; color: #0f172a;">⚫ Hitam</span>
+                                <div class="recipe-progress-track"><div id="bar-free-K" class="recipe-progress-fill" style="width: 0%; background: #1e293b;"></div></div>
+                                <span id="pct-free-K" style="width: 48px; text-align: right; font-size: 12px;">0 (0%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resep Cepat Eksperimen -->
+                    <div>
+                        <div style="font-size: 12.5px; font-weight: 800; color: #334155; margin-bottom: 6px;">⚡ Coba Resep Cepat Ilmuwan:</div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                            <button class="btn-3d orange" style="font-size: 12px; padding: 8px 6px;" onclick="applyQuickRecipe({R:2,Y:2,B:0,W:0,K:0})">🍊 Oranye Segar</button>
+                            <button class="btn-3d green" style="font-size: 12px; padding: 8px 6px;" onclick="applyQuickRecipe({R:0,Y:2,B:2,W:0,K:0})">🌿 Hijau Zamrud</button>
+                            <button class="btn-3d purple" style="font-size: 12px; padding: 8px 6px;" onclick="applyQuickRecipe({R:2,Y:0,B:2,W:2,K:0})">🌸 Ungu Lavender</button>
+                            <button class="btn-3d red" style="font-size: 12px; padding: 8px 6px;" onclick="applyQuickRecipe({R:2,Y:2,B:1,W:0,K:1})">🍫 Cokelat Kayu</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AREA TENGAH: DISPENSER PIPET 3D & GELAS KIMIA UTAMA -->
+                <div class="workbench-center-col">
+                    <!-- Rak 5 Botol Pipet Pewarna 3D -->
+                    <div class="dispenser-rack" id="free-dispenser-rack">
+                        <!-- Diisi secara dinamis oleh fungsi renderDispenserRack('free') -->
+                    </div>
+
+                    <!-- Kanvas Gelas Kimia 3D Interaktif -->
+                    <div style="position: relative; display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0;">
+                        <canvas id="free-beaker-canvas" width="640" height="360" style="max-height: 100%; width: auto;"></canvas>
+                    </div>
+
+                    <!-- Tombol Aksi Gelas Kimia -->
+                    <div style="display: flex; gap: 12px; z-index: 20; flex-shrink: 0;">
+                        <button class="btn-3d" style="padding: 10px 16px; font-size: 14px;" onclick="stirLiquid('free')">
+                            🌀 Aduk Pusaran Larutan
+                        </button>
+                        <button class="btn-3d green" style="padding: 10px 16px; font-size: 14px;" onclick="saveSampleToRack()">
+                            🧪 Simpan ke Rak Sampel
+                        </button>
+                        <button class="btn-3d red" style="padding: 10px 16px; font-size: 14px;" onclick="resetBeaker('free')">
+                            🚿 Bilas / Kosongkan Gelas
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PANEL KANAN: RAK TABUNG SAMPEL & CATATAN ILMIAH -->
+                <div class="lab-panel" style="display: flex; flex-direction: column; justify-content: space-between; padding: 16px 18px;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="badge-pill" style="margin-bottom: 4px; font-size: 12px; padding: 4px 12px;">🧪 KOLEKSI SAMPELMU</span>
+                            <button onclick="clearSampleRack()" style="background: none; border: none; color: #ef4444; font-weight: 800; font-size: 12px; cursor: pointer;">Hapus Semua</button>
+                        </div>
+                        <h3 style="font-size: 19px; font-weight: 900; color: #0f172a;">Rak Tabung Reaksi (6 Slot)</h3>
+                        <p style="font-size: 12px; color: #475569; margin-top: 2px;">
+                            Simpan warna hasil racikanmu. Ketuk tabung untuk memuatnya kembali!
+                        </p>
+
+                        <div class="sample-rack" id="sample-rack-grid">
+                            <!-- 6 Slot Tabung Sampel -->
+                        </div>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; padding: 14px; border-radius: 16px;">
+                        <div style="font-size: 13px; font-weight: 800; color: #ffd166; margin-bottom: 4px;">💡 Mengapa Hasilnya Begitu?</div>
+                        <p id="free-scientific-note" style="font-size: 12.5px; color: #e2e8f0; line-height: 1.45;">
+                            Teteskan pewarna dari botol pipet di atas untuk mengamati reaksi percampuran pigmen basah secara langsung!
+                        </p>
+                        <button class="btn-3d orange" style="width: 100%; margin-top: 10px; font-size: 13.5px; padding: 9px 14px;" onclick="switchSlide(5)">
+                            🎯 Uji Kemampuan di Tantangan Lab ➡
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =======================================================================
+             SLIDE 5: TANTANGAN PENCOCOKAN WARNA (ADAPTASI AMIGOKI COLOR MIXER)
+             ======================================================================= -->
+        <section class="slide-container" id="slide-5">
+            <div class="workbench-layout">
+                <!-- PANEL KIRI: DAFTAR 10 MISI & SAMPEL TARGET -->
+                <div class="lab-panel" style="display: flex; flex-direction: column; justify-content: space-between; padding: 16px 18px;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span class="badge-pill" style="margin-bottom: 0; font-size: 12px; padding: 4px 12px;">🎯 MISI LABORATORIUM</span>
+                            <span id="challenge-stars-total" style="font-weight: 900; color: #f59e0b; font-size: 15px;">⭐ 0 / 30</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 900; color: #0f172a; margin-bottom: 8px;">Pilih Level Tantangan (1 - 10):</h3>
+
+                        <div class="level-pills" id="challenge-level-grid">
+                            <!-- Diisi otomatis 10 level -->
+                        </div>
+
+                        <!-- Info Misi Aktif -->
+                        <div style="background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 16px; padding: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span id="mission-difficulty-badge" style="background: #dbeafe; color: #1e40af; font-weight: 800; font-size: 11px; padding: 3px 9px; border-radius: 999px;">Level 1 • Dasar</span>
+                                <span id="mission-target-drops-hint" style="font-size: 11px; font-weight: 800; color: #64748b;">Anjuran: 2 Tetes</span>
+                            </div>
+                            <h4 id="mission-title" style="font-size: 18px; font-weight: 900; color: #0f172a; margin-top: 4px;">Misi 1: Jingga Matahari Sore</h4>
+                            <p id="mission-story" style="font-size: 12.5px; color: #334155; line-height: 1.4; margin-top: 3px;">
+                                Campurkan dua warna primer yang menghasilkan warna hangat Jingga / Oranye!
+                            </p>
+
+                            <!-- Visualisasi Labu Sampel Target 3D -->
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px; background: #0f172a; padding: 8px 10px; border-radius: 12px; color: #fff;">
+                                <canvas id="target-flask-canvas" width="95" height="105" style="flex-shrink: 0;"></canvas>
+                                <div style="text-align: left;">
+                                    <div style="font-size: 10.5px; color: #90e0ef; font-weight: 800;">WARNA SAMPEL TARGET:</div>
+                                    <div id="mission-target-label" style="font-size: 16px; font-weight: 900; color: #ffd166; margin-bottom: 6px; line-height: 1.2;">Oranye Murni</div>
+                                    <button class="btn-3d" style="font-size: 11.5px; padding: 6px 10px;" onclick="showMissionHint()">
+                                        💡 Lihat Petunjuk Resep
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="mission-hint-box" style="background: #fffbeb; border: 2px solid #fde68a; color: #92400e; padding: 10px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; line-height: 1.4;">
+                        🔍 <strong>Petunjuk Ilmuwan:</strong> Tekan tombol "Lihat Petunjuk Resep" jika kamu membutuhkan bantuan petunjuk warna!
+                    </div>
+                </div>
+
+                <!-- AREA TENGAH: DISPENSER PIPET & GELAS KIMIA TANTANGAN -->
+                <div class="workbench-center-col">
+                    <div class="dispenser-rack" id="challenge-dispenser-rack">
+                        <!-- 5 Botol Pipet Mode Tantangan -->
+                    </div>
+
+                    <div style="position: relative; display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0;">
+                        <canvas id="challenge-beaker-canvas" width="640" height="360" style="max-height: 100%; width: auto;"></canvas>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; z-index: 20; flex-shrink: 0;">
+                        <button class="btn-3d" style="padding: 10px 16px; font-size: 14px;" onclick="stirLiquid('challenge')">
+                            🌀 Aduk Larutan
+                        </button>
+                        <button class="btn-3d orange" style="font-size: 15px; padding: 10px 22px;" onclick="evaluateChallengeMatch()">
+                            ✅ Uji Kemiripan Warna!
+                        </button>
+                        <button class="btn-3d red" style="padding: 10px 16px; font-size: 14px;" onclick="resetBeaker('challenge')">
+                            🚿 Ulangi Tetesan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PANEL KANAN: METER KEMIRIPAN & PERBANDINGAN VISUAL -->
+                <div class="lab-panel" style="display: flex; flex-direction: column; justify-content: space-between; padding: 16px 18px;">
+                    <div>
+                        <span class="badge-pill" style="margin-bottom: 4px; font-size: 12px; padding: 4px 12px;">🔬 SPEKTROMETER PENGUJI</span>
+                        <h3 style="font-size: 19px; font-weight: 900; color: #0f172a;">Perbandingan Warna</h3>
+
+                        <!-- Sandingkan Swatch Target vs Racikan Siswa -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+                            <div style="background: #f1f5f9; border-radius: 14px; padding: 10px; text-align: center; border: 2px solid #cbd5e1;">
+                                <div style="font-size: 11px; font-weight: 800; color: #475569; margin-bottom: 6px;">SAMPEL TARGET</div>
+                                <div id="compare-target-swatch" class="swatch-circle-3d" style="width: 72px; height: 72px; margin: 0 auto; background: #f8780f;"></div>
+                            </div>
+                            <div style="background: #f1f5f9; border-radius: 14px; padding: 10px; text-align: center; border: 2px solid #cbd5e1;">
+                                <div style="font-size: 11px; font-weight: 800; color: #475569; margin-bottom: 6px;">RACIKANMU</div>
+                                <div id="compare-user-swatch" class="swatch-circle-3d" style="width: 72px; height: 72px; margin: 0 auto; background: #e2e8f0;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Meter Akurasi Real-Time / Hasil Uji -->
+                        <div class="accuracy-meter-box">
+                            <div style="font-size: 11px; color: #90e0ef; font-weight: 800;">TINGKAT KEMIRIPAN SPEKTRUM:</div>
+                            <div id="challenge-similarity-text" style="font-size: 32px; font-weight: 900; color: #ffd166; margin: 2px 0;">0%</div>
+                            <div class="recipe-progress-track" style="height: 14px; background: #1e293b;">
+                                <div id="challenge-similarity-bar" class="recipe-progress-fill" style="width: 0%; background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);"></div>
+                            </div>
+                            <div style="font-size: 11.5px; color: #cbd5e1; margin-top: 6px;">
+                                Target Lulus Misi: <strong>Minimal 85% Kemiripan</strong>
+                            </div>
+                        </div>
+
+                        <!-- Ringkasan Tetesan Siswa Saat Ini -->
+                        <div style="margin-top: 10px; background: #f8fafc; padding: 10px 12px; border-radius: 12px; border: 1px solid #cbd5e1;">
+                            <div style="font-size: 12px; font-weight: 800; color: #334155; margin-bottom: 4px;">Catatan Tetesan di Gelasmu:</div>
+                            <div id="challenge-drops-summary" style="font-size: 13px; font-weight: 700; color: #0f172a;">
+                                Belum ada tetesan pewarna (0 Tetes)
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-3d green" style="width: 100%; padding: 10px 16px; font-size: 14px;" onclick="switchSlide(6)">
+                        📝 Lanjut ke Kuis Evaluasi & Rapor ➡
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- =======================================================================
+             SLIDE 6: KUIS EVALUASI & SERTIFIKAT PENELITI MUDA
+             ======================================================================= -->
+        <section class="slide-container" id="slide-6">
+            <div style="width: 100%; height: 100%; display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 24px;">
+                <!-- PANEL KIRI: SOAL KUIS INTERAKTIF KELAS V & VI -->
+                <div class="lab-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span class="badge-pill" style="margin-bottom: 0;">📝 EVALUASI PEMAHAMAN</span>
+                            <span id="quiz-progress-badge" style="font-weight: 900; font-size: 16px; color: #0284c7;">Soal 1 / 8</span>
+                        </div>
+
+                        <div id="quiz-question-box" style="background: #0f172a; color: #fff; padding: 22px; border-radius: 20px; margin-bottom: 18px; display: flex; align-items: center; gap: 20px;">
+                            <div id="quiz-visual-swatch" style="min-width: 84px; height: 84px; border-radius: 20px; background: #f8780f; border: 4px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 36px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+                                🧪
+                            </div>
+                            <div>
+                                <h3 id="quiz-question-text" style="font-size: 21px; line-height: 1.4; font-weight: 800;">
+                                    Memuat pertanyaan kuis...
+                                </h3>
+                            </div>
+                        </div>
+
+                        <div id="quiz-options-container">
+                            <!-- Tombol Opsi A, B, C, D -->
+                        </div>
+                    </div>
+
+                    <!-- Umpan Balik Jawaban & Navigasi Soal -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #e2e8f0; padding-top: 14px;">
+                        <div id="quiz-feedback-text" style="font-size: 15px; font-weight: 800; color: #334155;">
+                            Pilih salah satu jawaban yang paling tepat!
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-3d" id="btn-next-quiz" style="display: none;" onclick="nextQuizQuestion()">
+                                Soal Berikutnya ➡
+                            </button>
+                            <button class="btn-3d orange" onclick="restartQuiz()">
+                                🔄 Ulangi Kuis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANEL KANAN: RAPOR CAPAIAN PENELITI MUDA -->
+                <div class="lab-panel-dark" style="display: flex; flex-direction: column; justify-content: space-between; text-align: center;">
+                    <div>
+                        <span class="badge-pill">🏆 RAPOR LABORATORIUM MAYA</span>
+                        <h3 style="font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 6px;">Kartu Prestasi Ilmuwan Warna</h3>
+                        <p style="font-size: 14px; color: #cbd5e1; margin-bottom: 18px;">
+                            Rekap hasil belajar, eksperimen, dan evaluasi pencampuran pewarna basahmu:
+                        </p>
+
+                        <!-- Lencana Medali 3D -->
+                        <div style="width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 16px; background: radial-gradient(circle at 30% 30%, #ffd166, #f77f00); border: 5px solid #fff; box-shadow: 0 12px 30px rgba(247, 127, 0, 0.5); display: flex; align-items: center; justify-content: center; font-size: 58px;">
+                            🥇
+                        </div>
+
+                        <div id="student-rank-title" style="font-size: 22px; font-weight: 900; color: #ffd166; margin-bottom: 16px;">
+                            Asisten Peneliti Warna
+                        </div>
+
+                        <!-- Statistik Skor -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left;">
+                            <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.15);">
+                                <div style="font-size: 12px; color: #90e0ef; font-weight: 700;">MISI TANTANGAN SELESAI</div>
+                                <div id="report-missions-done" style="font-size: 26px; font-weight: 900; color: #fff; margin-top: 4px;">0 / 10 Misi</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.15);">
+                                <div style="font-size: 12px; color: #90e0ef; font-weight: 700;">BINTANG LABORATORIUM</div>
+                                <div id="report-stars-earned" style="font-size: 26px; font-weight: 900; color: #ffd166; margin-top: 4px;">⭐ 0 / 30</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.15);">
+                                <div style="font-size: 12px; color: #90e0ef; font-weight: 700;">SKOR KUIS EVALUASI</div>
+                                <div id="report-quiz-score" style="font-size: 26px; font-weight: 900; color: #2ec4b6; margin-top: 4px;">0 / 100</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.15);">
+                                <div style="font-size: 12px; color: #90e0ef; font-weight: 700;">SAMPEL DIKOLEKSI</div>
+                                <div id="report-samples-saved" style="font-size: 26px; font-weight: 900; color: #fff; margin-top: 4px;">0 Tabung</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-top: 16px;">
+                        <button class="btn-3d green" style="flex: 1;" onclick="switchSlide(4)">
+                            🧪 Kembali Eksperimen
+                        </button>
+                        <button class="btn-3d" style="flex: 1;" onclick="switchSlide(1)">
+                            🏠 Ke Beranda Utama
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =======================================================================
+             MODAL POPUP CUSTOM (HASIL UJI TANTANGAN & INFO)
+             ======================================================================= -->
+        <div id="custom-modal-overlay">
+            <div class="modal-card-3d">
+                <div id="modal-badge-icon" style="font-size: 56px; margin-bottom: 6px;">🎉</div>
+                <h3 id="modal-title" style="font-size: 28px; font-weight: 900; color: #0f172a;">Hasil Uji Kemiripan!</h3>
+                <div id="modal-stars" style="font-size: 32px; margin: 8px 0; color: #f59e0b;">⭐⭐⭐</div>
+
+                <div class="swatch-compare-row">
+                    <div>
+                        <div style="font-size: 12px; font-weight: 800; color: #64748b; margin-bottom: 6px;">WARNA TARGET</div>
+                        <div id="modal-target-swatch" class="swatch-circle-3d"></div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; font-weight: 800; color: #64748b; margin-bottom: 6px;">RACIKANMU</div>
+                        <div id="modal-user-swatch" class="swatch-circle-3d"></div>
+                    </div>
+                </div>
+
+                <div id="modal-accuracy-pill" style="display: inline-block; background: #0f172a; color: #ffd166; font-weight: 900; font-size: 20px; padding: 8px 22px; border-radius: 999px; margin-bottom: 12px;">
+                    Kemiripan: 98%
+                </div>
+
+                <p id="modal-message" style="font-size: 16px; color: #334155; line-height: 1.5; margin-bottom: 22px;">
+                    Luar biasa! Takaran tetesan pewarna basahmu sangat akurat.
+                </p>
+
+                <div style="display: flex; justify-content: center; gap: 14px;">
+                    <button class="btn-3d" onclick="closeCustomModal()">Tutup / Coba Lagi</button>
+                    <button class="btn-3d green" id="modal-next-level-btn" onclick="goToNextChallengeLevel()">Misi Berikutnya ➡</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="info-modal-overlay" class="info-modal-overlay">
+            <div class="info-modal-card">
+                <div class="info-modal-body">
+                    <div class="info-modal-header">
+                        <span class="badge-pill" style="margin-bottom: 0;">ℹ️</span>
+                        <button class="btn-3d" onclick="closeInfoModal()">Tutup</button>
+                    </div>
+
+                    <div>
+                        <h3 class="info-modal-title">Informasi Umum</h3>
+                        <div class="info-modal-content">
+                            <strong>1. Tujuan Pembelajaran</strong>
+                            <p>Murid mampu memahami konsep paduan warna dalam pewarna basah dan menyimulasikannya.<p> 
+                            <strong>2. Pengembang Konten</strong>
+                            <p>- Ikhwanul Furqon, S.Pd., M.Pd., Gr. (SMAN 7 Kerinci).<p> 
+                            <p>- Abdul Haris, S.Pd.I., S.Pd.,SD. (SDN Kalideres 07 Pagi).<p> 
+                            <strong>3. Referensi</strong>
+                            <p>- Hidayatulloh, T., dan Fauziah, A. (2024) Panduan Guru Seni Rupa untuk SD/MI Kelas V (Edisi Revisi). Jakarta: Pusat Perbukuan, Kemendikbudristek RI.<p> 
+                            <p>- Kerangka dasar lab maya, aset gambar, suara dan font dibuat dengan Gemini AI.<p>
+                            <br><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================================================
+         SCRIPT UTAMA: MESIN AUDIO OFFLINE, KIMIA WARNA RYB+WK & RENDERER 3D CANVAS
+         ========================================================================== -->
+    <script>
+        /* ========================================================================
+           1. PENYESUAIAN SKALA LAYAR OTOMATIS RASIO FIX 16:9 (1600 x 900)
+           ======================================================================== */
+        function resizeStage16x9() {
+            const stage = document.getElementById('stage-wrapper');
+            const targetW = 1600;
+            const targetH = 900;
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const scale = Math.min(winW / targetW, winH / targetH) * 0.98;
+            stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        }
+        window.addEventListener('resize', resizeStage16x9);
+
+        /* ========================================================================
+           2. GENERATOR EFEK SUARA OFFLINE (WEB AUDIO API SYNTHESIZER)
+              Tanpa musik latar, hanya efek suara klik, tetesan air, aduk, benar/salah
+           ======================================================================== */
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('btn-sound-toggle');
+            btn.textContent = soundEnabled ? '🔊' : '🔇';
+            btn.className = soundEnabled ? 'btn-3d icon-btn-3d green' : 'btn-3d icon-btn-3d red';
+            if (soundEnabled) playSound('click');
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                // Suara klik tombol mekanik lembut
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(180, now + 0.055);
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.055);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            } 
+            else if (type === 'drop') {
+                // Suara tetesan cairan "Blup!" realistik
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(980, now + 0.09);
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.linearRampToValueAtTime(0.32, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            }
+            else if (type === 'remove') {
+                // Suara sedot balik pipet
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(700, now);
+                osc.frequency.exponentialRampToValueAtTime(260, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.09);
+            }
+            else if (type === 'stir') {
+                // Suara pusaran cairan diaduk
+                for (let i = 0; i < 3; i++) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    const start = now + i * 0.07;
+                    osc.frequency.setValueAtTime(240 + i * 60, start);
+                    osc.frequency.exponentialRampToValueAtTime(480 + i * 80, start + 0.06);
+                    gain.gain.setValueAtTime(0.14, start);
+                    gain.gain.exponentialRampToValueAtTime(0.001, start + 0.065);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(start);
+                    osc.stop(start + 0.07);
+                }
+            }
+            else if (type === 'flush') {
+                // Suara bilas air (White noise filter sweep)
+                const bufferSize = audioCtx.sampleRate * 0.25;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(900, now);
+                filter.frequency.exponentialRampToValueAtTime(280, now + 0.25);
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start(now);
+            }
+            else if (type === 'correct') {
+                // Nada berhasil (Arpeggio Mayor Ceria)
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    const t = now + idx * 0.075;
+                    osc.frequency.setValueAtTime(freq, t);
+                    gain.gain.setValueAtTime(0.25, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(t);
+                    osc.stop(t + 0.26);
+                });
+            }
+            else if (type === 'wrong') {
+                // Nada kurang tepat (Dua nada rendah lembut)
+                const notes = [260, 195];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    const t = now + idx * 0.14;
+                    osc.frequency.setValueAtTime(freq, t);
+                    gain.gain.setValueAtTime(0.15, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(t);
+                    osc.stop(t + 0.19);
+                });
+            }
+        }
+
+        /* ========================================================================
+           3. MESIN MATEMATIKA PIGMEN PEWARNA BASAH (RYB + PUTIH + HITAM SUBTRAKTIF)
+              Menjamin Merah+Kuning=Oranye, Kuning+Biru=Hijau, Merah+Biru=Ungu, dst.
+           ======================================================================== */
+        const DYE_CHANNELS = [
+            { key: 'R', name: 'Merah', sub: 'Primer', hex: '#e6232d', topHex: '#ff5c67' },
+            { key: 'Y', name: 'Kuning', sub: 'Primer', hex: '#fcd70f', topHex: '#fff066' },
+            { key: 'B', name: 'Biru', sub: 'Primer', hex: '#145fe1', topHex: '#5ca0ff' },
+            { key: 'W', name: 'Putih', sub: 'Tint (+Terang)', hex: '#f8fafc', topHex: '#ffffff' },
+            { key: 'K', name: 'Hitam', sub: 'Shade (+Gelap)', hex: '#1e293b', topHex: '#475569' }
+        ];
+
+        // Konversi proporsi pigmen (R, Y, B, W, K) menjadi warna RGB perseptual yang akurat
+        function computeWetDyeRGB(drops) {
+            const R = drops.R || 0;
+            const Y = drops.Y || 0;
+            const B = drops.B || 0;
+            const W = drops.W || 0;
+            const K = drops.K || 0;
+
+            const total = R + Y + B + W + K;
+            if (total === 0) {
+                return { r: 222, g: 242, b: 252, empty: true, hex: '#def2fc' };
+            }
+
+            const chromaTotal = R + Y + B;
+            let baseR = 248, baseG = 250, baseB = 252;
+
+            if (chromaTotal > 0) {
+                // Normalisasi proporsi RYB
+                const rN = R / chromaTotal;
+                const yN = Y / chromaTotal;
+                const bN = B / chromaTotal;
+
+                // Penghitungan komponen tri-kromat (mengeliminasi komponen minimum sebagai pembentuk cokelat/lumpur)
+                const mud = Math.min(rN, yN, bN);
+                const r1 = rN - mud;
+                const y1 = yN - mud;
+                const b1 = bN - mud;
+
+                // Pasangan sekunder
+                const orange = Math.min(r1, y1);
+                const green  = Math.min(y1, b1);
+                const purple = Math.min(r1, b1);
+
+                // Sisa primer murni
+                const redPure    = r1 - orange - purple;
+                const yellowPure = y1 - orange - green;
+                const bluePure   = b1 - green - purple;
+
+                // Bobot warna dasar dalam kubus warna pigmen basah:
+                const wRed    = redPure;
+                const wYellow = yellowPure;
+                const wBlue   = bluePure;
+                const wOrange = orange * 2.0;
+                const wGreen  = green * 2.0;
+                const wPurple = purple * 2.0;
+                const wBrown  = mud * 3.0;
+
+                const weightSum = wRed + wYellow + wBlue + wOrange + wGreen + wPurple + wBrown || 1;
+
+                // Palet Pigmen Basah Acuan (Sangat hidup dan akurat untuk anak SD)
+                const C_RED    = [230, 32,  42];
+                const C_YELLOW = [252, 218, 12];
+                const C_BLUE   = [20,  92,  228];
+                const C_ORANGE = [250, 118, 12];
+                const C_GREEN  = [22,  178, 72];
+                const C_PURPLE = [142, 38,  185];
+                const C_BROWN  = [102, 72,  54];
+
+                baseR = (wRed*C_RED[0] + wYellow*C_YELLOW[0] + wBlue*C_BLUE[0] + wOrange*C_ORANGE[0] + wGreen*C_GREEN[0] + wPurple*C_PURPLE[0] + wBrown*C_BROWN[0]) / weightSum;
+                baseG = (wRed*C_RED[1] + wYellow*C_YELLOW[1] + wBlue*C_BLUE[1] + wOrange*C_ORANGE[1] + wGreen*C_GREEN[1] + wPurple*C_PURPLE[1] + wBrown*C_BROWN[1]) / weightSum;
+                baseB = (wRed*C_RED[2] + wYellow*C_YELLOW[2] + wBlue*C_BLUE[2] + wOrange*C_ORANGE[2] + wGreen*C_GREEN[2] + wPurple*C_PURPLE[2] + wBrown*C_BROWN[2]) / weightSum;
+            }
+
+            // Jika hanya Putih dan/atau Hitam tanpa warna kromatik (R=0, Y=0, B=0)
+            if (chromaTotal === 0) {
+                const wkTotal = W + K;
+                // Hitam memiliki kekuatan pigmen sedikit lebih kuat dari putih
+                const kWeight = (K * 1.35) / (W + K * 1.35);
+                const val = Math.round(248 * (1 - kWeight) + 28 * kWeight);
+                return {
+                    r: val, g: val, b: val + 3,
+                    empty: false,
+                    hex: rgbToHex(val, val, val + 3)
+                };
+            }
+
+            // Terapkan pengaruh TINT (Putih) dan SHADE (Hitam) terhadap warna Hue dasar
+            const whiteRatio = W / (chromaTotal + W + K * 1.2);
+            const blackRatio = (K * 1.25) / (chromaTotal * 0.9 + W * 0.7 + K * 1.25);
+
+            // Campurkan ke arah Putih (248, 250, 252) untuk Tint
+            let finalR = baseR * (1 - whiteRatio * 0.85) + 248 * (whiteRatio * 0.85);
+            let finalG = baseG * (1 - whiteRatio * 0.85) + 250 * (whiteRatio * 0.85);
+            let finalB = baseB * (1 - whiteRatio * 0.85) + 252 * (whiteRatio * 0.85);
+
+            // Campurkan ke arah Hitam Pekat (24, 26, 32) untuk Shade
+            finalR = finalR * (1 - blackRatio * 0.88) + 24 * (blackRatio * 0.88);
+            finalG = finalG * (1 - blackRatio * 0.88) + 26 * (blackRatio * 0.88);
+            finalB = finalB * (1 - blackRatio * 0.88) + 32 * (blackRatio * 0.88);
+
+            const rOut = Math.round(Math.max(0, Math.min(255, finalR)));
+            const gOut = Math.round(Math.max(0, Math.min(255, finalG)));
+            const bOut = Math.round(Math.max(0, Math.min(255, finalB)));
+
+            return {
+                r: rOut,
+                g: gOut,
+                b: bOut,
+                empty: false,
+                hex: rgbToHex(rOut, gOut, bOut)
+            };
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => {
+                const h = Math.max(0, Math.min(255, Math.round(x))).toString(16);
+                return h.length === 1 ? '0' + h : h;
+            }).join('');
+        }
+
+        // Penamaan Warna Cerdas dalam Bahasa Indonesia untuk Edukasi Siswa SD
+        function classifyIndonesianColorName(drops) {
+            const { R, Y, B, W, K } = drops;
+            const total = R + Y + B + W + K;
+            if (total === 0) {
+                return {
+                    name: 'Air Jernih (0 Tetes)',
+                    category: 'Gelas Kimia Kosong',
+                    note: 'Teteskan pewarna dari botol pipet di atas untuk mengamati reaksi percampuran pigmen basah secara langsung!'
+                };
+            }
+
+            const chroma = R + Y + B;
+            if (chroma === 0) {
+                if (W > 0 && K === 0) return { name: 'Putih Susu', category: 'Warna Netral Terang', note: 'Larutan hanya berisi pigmen Putih murni.' };
+                if (K > 0 && W === 0) return { name: 'Hitam Pekat Arang', category: 'Warna Netral Gelap', note: 'Larutan hanya berisi pigmen Hitam murni.' };
+                if (W > K * 1.5) return { name: 'Abu-abu Muda Perak', category: 'Warna Netral (Putih + Hitam)', note: 'Pencampuran Putih lebih banyak dari Hitam menghasilkan warna Abu-abu Muda.' };
+                if (K > W * 1.5) return { name: 'Abu-abu Tua Aspal', category: 'Warna Netral (Putih + Hitam)', note: 'Pencampuran Hitam lebih banyak dari Putih menghasilkan Abu-abu Tua.' };
+                return { name: 'Abu-abu Netral', category: 'Warna Netral (Putih + Hitam)', note: 'Putih dan Hitam yang seimbang menghasilkan warna Abu-abu Netral.' };
+            }
+
+            // Tentukan rona utama (Hue)
+            let hueName = '';
+            let baseCat = '';
+            const minChroma = Math.min(R, Y, B);
+
+            if (R > 0 && Y > 0 && B > 0 && minChroma / chroma >= 0.18) {
+                if (R > Y && R > B) hueName = 'Cokelat Kemerahan (Mahoni)';
+                else if (Y > R && Y > B) hueName = 'Cokelat Kekuningan (Karamel)';
+                else if (B > R && B > Y) hueName = 'Cokelat Tua Tanah';
+                else hueName = 'Cokelat Netral Bumi';
+                baseCat = 'Campuran 3 Warna Primer';
+            } else if (Y === 0 && B === 0) {
+                hueName = 'Merah'; baseCat = 'Warna Primer';
+            } else if (R === 0 && B === 0) {
+                hueName = 'Kuning'; baseCat = 'Warna Primer';
+            } else if (R === 0 && Y === 0) {
+                hueName = 'Biru'; baseCat = 'Warna Primer';
+            } else if (B === 0) {
+                // Antara Merah dan Kuning
+                const ratio = R / (R + Y);
+                if (ratio > 0.62) { hueName = 'Merah-Oranye (Jingga Tua)'; baseCat = 'Warna Tersier'; }
+                else if (ratio < 0.38) { hueName = 'Kuning-Oranye (Amber)'; baseCat = 'Warna Tersier'; }
+                else { hueName = 'Oranye (Jingga)'; baseCat = 'Warna Sekunder (Merah + Kuning)'; }
+            } else if (R === 0) {
+                // Antara Kuning dan Biru
+                const ratio = Y / (Y + B);
+                if (ratio > 0.62) { hueName = 'Kuning-Hijau (Hijau Pupus)'; baseCat = 'Warna Tersier'; }
+                else if (ratio < 0.38) { hueName = 'Biru-Hijau (Toska)'; baseCat = 'Warna Tersier'; }
+                else { hueName = 'Hijau Zamrud'; baseCat = 'Warna Sekunder (Kuning + Biru)'; }
+            } else if (Y === 0) {
+                // Antara Merah dan Biru
+                const ratio = R / (R + B);
+                if (ratio > 0.62) { hueName = 'Merah-Ungu (Magenta)'; baseCat = 'Warna Tersier'; }
+                else if (ratio < 0.38) { hueName = 'Biru-Ungu (Nila/Indigo)'; baseCat = 'Warna Tersier'; }
+                else { hueName = 'Ungu (Violet)'; baseCat = 'Warna Sekunder (Merah + Biru)'; }
+            } else {
+                hueName = 'Cokelat Campuran';
+                baseCat = 'Campuran Kompleks';
+            }
+
+            // Modifikasi nama berdasarkan Putih (Tint) & Hitam (Shade)
+            let modifier = '';
+            let modCat = baseCat;
+            let note = `Larutan ini memiliki rona dasar ${hueName} (${baseCat}).`;
+
+            if (W > 0 && K === 0) {
+                if (hueName === 'Merah') hueName = 'Merah Muda (Pink Pastel)';
+                else if (hueName === 'Biru') hueName = 'Biru Muda Langit';
+                else if (hueName.includes('Ungu')) hueName = 'Ungu Muda (Lavender)';
+                else modifier = ' Muda / Pastel';
+                modCat = `Tint (${baseCat} + Putih)`;
+                note = `Penambahan pewarna Putih menciptakan efek TINT, sehingga warna menjadi lebih terang dan lembut (${hueName}${modifier}).`;
+            } else if (K > 0 && W === 0) {
+                if (hueName === 'Merah') hueName = 'Merah Marun Gelap';
+                else if (hueName === 'Biru') hueName = 'Biru Dongker (Navy)';
+                else if (hueName.includes('Kuning')) hueName = 'Hijau Zaitun / Kuning Gelap';
+                else modifier = ' Tua / Gelap';
+                modCat = `Shade (${baseCat} + Hitam)`;
+                note = `Penambahan pewarna Hitam menciptakan efek SHADE, sehingga warna menjadi lebih pekat dan gelap (${hueName}${modifier}).`;
+            } else if (W > 0 && K > 0) {
+                modifier = ' Redup (Tone)';
+                modCat = `Tone (${baseCat} + Putih + Hitam)`;
+                note = `Penambahan Putih sekaligus Hitam (Abu-abu) menghasilkan efek TONE yang meredupkan kecerahan warna.`;
+            }
+
+            return {
+                name: hueName + modifier,
+                category: modCat,
+                note: note
+            };
+        }
+
+        /* ========================================================================
+           4. SISTEM NAVIGASI ANTAR SLIDE (1 SAMPAI 6)
+           ======================================================================== */
+        let currentSlide = 1;
+
+        function switchSlide(slideNum) {
+            playSound('click');
+            currentSlide = slideNum;
+
+            for (let i = 1; i <= 6; i++) {
+                const el = document.getElementById(`slide-${i}`);
+                const btn = document.getElementById(`nav-btn-${i}`);
+                if (el) el.classList.toggle('active', i === slideNum);
+                if (btn) btn.classList.toggle('active-tab', i === slideNum);
+            }
+
+            if (slideNum === 3) {
+                drawInteractiveColorWheel();
+                updateTTSSimulator();
+            } else if (slideNum === 4) {
+                updateWorkbenchUI('free');
+            } else if (slideNum === 5) {
+                updateWorkbenchUI('challenge');
+                drawTargetSampleFlask();
+            } else if (slideNum === 6) {
+                updateFinalReportCard();
+            }
+        }
+
+        /* ========================================================================
+           5. SLIDE 3: MODUL TEORI WARNA INTERAKTIF (RODA WARNA & TINT/TONE/SHADE)
+           ======================================================================== */
+        const COLOR_WHEEL_DATA = [
+            { name: 'Merah', cat: 'Primer', hex: '#e6232d', formula: '2 Tetes Merah Murni', desc: 'Warna Primer utama. Tidak dapat dibuat dari percampuran warna lain.' },
+            { name: 'Merah-Oranye', cat: 'Tersier', hex: '#f2531d', formula: '2 Tetes Merah + 1 Tetes Kuning', desc: 'Warna Tersier hangat hasil perpaduan warna primer Merah dan sekunder Oranye.' },
+            { name: 'Oranye (Jingga)', cat: 'Sekunder', hex: '#f8780f', formula: '1 Tetes Merah + 1 Tetes Kuning', desc: 'Warna Sekunder cerah yang dihasilkan dari percampuran seimbang Merah dan Kuning.' },
+            { name: 'Kuning-Oranye', cat: 'Tersier', hex: '#faaa0f', formula: '1 Tetes Merah + 2 Tetes Kuning', desc: 'Warna Tersier keemasan hasil dominasi Kuning dengan sedikit sentuhan Merah.' },
+            { name: 'Kuning', cat: 'Primer', hex: '#fcd70f', formula: '2 Tetes Kuning Murni', desc: 'Warna Primer paling terang di roda warna. Menjadi bahan dasar pembuat Hijau dan Oranye.' },
+            { name: 'Kuning-Hijau', cat: 'Tersier', hex: '#8ec629', formula: '2 Tetes Kuning + 1 Tetes Biru', desc: 'Warna Tersier segar seperti pucuk daun muda (Hijau Pupus / Lime).' },
+            { name: 'Hijau', cat: 'Sekunder', hex: '#1eaf4b', formula: '1 Tetes Kuning + 1 Tetes Biru', desc: 'Warna Sekunder sejuk yang terbentuk saat pigmen Kuning dan Biru bercampur rata.' },
+            { name: 'Biru-Hijau (Toska)', cat: 'Tersier', hex: '#188896', formula: '1 Tetes Kuning + 2 Tetes Biru', desc: 'Warna Tersier seperti air laut tropis, perpaduan Hijau dengan Biru lebih banyak.' },
+            { name: 'Biru', cat: 'Primer', hex: '#145fe1', formula: '2 Tetes Biru Murni', desc: 'Warna Primer dingin yang melambangkan langit dan samudra.' },
+            { name: 'Biru-Ungu (Nila)', cat: 'Tersier', hex: '#4e43c8', formula: '2 Tetes Biru + 1 Tetes Merah', desc: 'Warna Tersier mendalam hasil percampuran Biru dominan dengan Merah.' },
+            { name: 'Ungu (Violet)', cat: 'Sekunder', hex: '#8728af', formula: '1 Tetes Biru + 1 Tetes Merah', desc: 'Warna Sekunder anggun yang lahir dari percampuran seimbang Merah dan Biru.' },
+            { name: 'Merah-Ungu (Magenta)', cat: 'Tersier', hex: '#b7256e', formula: '2 Tetes Merah + 1 Tetes Biru', desc: 'Warna Tersier mencolok hasil perpaduan Merah dominan dengan Biru.' }
+        ];
+
+        let selectedWheelIndex = 0;
+        let wheelHighlightFilter = 'all';
+
+        function switchTheoryTab(tabIdx) {
+            playSound('click');
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`theory-btn-${i}`).classList.toggle('active', i === tabIdx);
+                document.getElementById(`theory-pane-${i}`).classList.toggle('active', i === tabIdx);
+            }
+            if (tabIdx === 1) drawInteractiveColorWheel();
+            if (tabIdx === 2) updateTTSSimulator();
+        }
+
+        function filterWheelHighlight(filterType) {
+            playSound('click');
+            wheelHighlightFilter = filterType;
+            drawInteractiveColorWheel();
+        }
+
+        function drawInteractiveColorWheel() {
+            const canvas = document.getElementById('wheel-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const outerR = 190;
+            const innerR = 72;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Bayangan dasar roda 3D
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy + 8, outerR + 6, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.25)';
+            ctx.fill();
+            ctx.restore();
+
+            const sliceAngle = (Math.PI * 2) / 12;
+
+            COLOR_WHEEL_DATA.forEach((seg, i) => {
+                const startA = -Math.PI / 2 - sliceAngle / 2 + i * sliceAngle;
+                const endA = startA + sliceAngle;
+                const isSelected = (i === selectedWheelIndex);
+                const isFilteredIn = (wheelHighlightFilter === 'all' || wheelHighlightFilter === seg.cat);
+
+                const rOut = isSelected ? outerR + 12 : (isFilteredIn ? outerR : outerR - 14);
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(cx, cy, rOut, startA, endA);
+                ctx.arc(cx, cy, innerR, endA, startA, true);
+                ctx.closePath();
+
+                ctx.fillStyle = seg.hex;
+                ctx.globalAlpha = isFilteredIn ? 1.0 : 0.25;
+                ctx.fill();
+
+                ctx.lineWidth = isSelected ? 5 : 2.5;
+                ctx.strokeStyle = isSelected ? '#0f172a' : '#ffffff';
+                ctx.stroke();
+
+                // Label singkatan kategori di tiap irisan
+                const midA = (startA + endA) / 2;
+                const labelR = (rOut + innerR) / 2;
+                const lx = cx + Math.cos(midA) * labelR;
+                const ly = cy + Math.sin(midA) * labelR;
+
+                ctx.fillStyle = (i === 3 || i === 4 || i === 5) ? '#0f172a' : '#ffffff';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const badgeText = seg.cat === 'Primer' ? 'P' : (seg.cat === 'Sekunder' ? 'S' : 'T');
+                ctx.fillText(badgeText, lx, ly);
+                ctx.restore();
+            });
+
+            // Lingkaran Tengah 3D Menampilkan Warna Terpilih
+            const activeSeg = COLOR_WHEEL_DATA[selectedWheelIndex];
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, innerR - 6, 0, Math.PI * 2);
+            ctx.fillStyle = activeSeg.hex;
+            ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+
+            // Kilau Kaca 3D
+            const grad = ctx.createRadialGradient(cx - 20, cy - 20, 5, cx, cy, innerR);
+            grad.addColorStop(0, 'rgba(255,255,255,0.55)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Klik pada Kanvas Roda Warna
+        document.getElementById('wheel-canvas').addEventListener('pointerdown', function(e) {
+            const rect = this.getBoundingClientRect();
+            const scaleX = this.width / rect.width;
+            const scaleY = this.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+
+            const cx = this.width / 2;
+            const cy = this.height / 2;
+            const dx = x - cx;
+            const dy = y - cy;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist >= 65 && dist <= 205) {
+                let angle = Math.atan2(dy, dx) + Math.PI / 2 + (Math.PI / 12);
+                if (angle < 0) angle += Math.PI * 2;
+                const index = Math.floor((angle / (Math.PI * 2)) * 12) % 12;
+                selectedWheelIndex = index;
+                playSound('drop');
+                updateWheelInfoCard();
+                drawInteractiveColorWheel();
+            }
+        });
+
+        function updateWheelInfoCard() {
+            const seg = COLOR_WHEEL_DATA[selectedWheelIndex];
+            document.getElementById('wheel-selected-swatch').style.background = seg.hex;
+            document.getElementById('wheel-selected-cat').textContent = `WARNA ${seg.cat.toUpperCase()}`;
+            document.getElementById('wheel-selected-name').textContent = seg.name;
+            document.getElementById('wheel-selected-desc').textContent = seg.desc;
+            document.getElementById('wheel-selected-formula').textContent = seg.formula;
+        }
+
+        // Simulator Tab 2: Hue, Tint, Tone, Shade (4 Tabung Reaksi 3D)
+        const TTS_HUES = [
+            { name: 'Merah', r: 230, g: 32, b: 42 },
+            { name: 'Oranye', r: 250, g: 118, b: 12 },
+            { name: 'Kuning', r: 252, g: 218, b: 12 },
+            { name: 'Hijau', r: 22, g: 178, b: 72 },
+            { name: 'Biru', r: 20, g: 92, b: 228 },
+            { name: 'Ungu', r: 142, g: 38, b: 185 }
+        ];
+        let currentTTSHueIdx = 0;
+
+        function setTTSHue(idx) {
+            playSound('drop');
+            currentTTSHueIdx = idx;
+            updateTTSSimulator();
+        }
+
+        function updateTTSSimulator() {
+            const wVal = parseInt(document.getElementById('tts-white-slider').value, 10);
+            const kVal = parseInt(document.getElementById('tts-black-slider').value, 10);
+            document.getElementById('tts-white-val').textContent = wVal + '%';
+            document.getElementById('tts-black-val').textContent = kVal + '%';
+
+            const canvas = document.getElementById('tts-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const hue = TTS_HUES[currentTTSHueIdx];
+
+            // Hitung 4 tabung: 1. Hue Murni, 2. Tint (+Putih), 3. Tone (+Putih & Hitam), 4. Shade (+Hitam)
+            const wFactor = Math.max(0.45, wVal / 100);
+            const kFactor = Math.max(0.45, kVal / 100);
+
+            const tubes = [
+                {
+                    label: 'HUE',
+                    sub: 'Rona Murni',
+                    r: hue.r, g: hue.g, b: hue.b
+                },
+                {
+                    label: 'TINT',
+                    sub: `+${Math.round(wFactor*100)}% Putih`,
+                    r: Math.round(hue.r * (1 - wFactor * 0.75) + 250 * (wFactor * 0.75)),
+                    g: Math.round(hue.g * (1 - wFactor * 0.75) + 250 * (wFactor * 0.75)),
+                    b: Math.round(hue.b * (1 - wFactor * 0.75) + 252 * (wFactor * 0.75))
+                },
+                {
+                    label: 'TONE',
+                    sub: '+Putih & Hitam',
+                    r: Math.round(hue.r * 0.5 + 135 * 0.5),
+                    g: Math.round(hue.g * 0.5 + 138 * 0.5),
+                    b: Math.round(hue.b * 0.5 + 145 * 0.5)
+                },
+                {
+                    label: 'SHADE',
+                    sub: `+${Math.round(kFactor*100)}% Hitam`,
+                    r: Math.round(hue.r * (1 - kFactor * 0.78) + 20 * (kFactor * 0.78)),
+                    g: Math.round(hue.g * (1 - kFactor * 0.78) + 22 * (kFactor * 0.78)),
+                    b: Math.round(hue.b * (1 - kFactor * 0.78) + 28 * (kFactor * 0.78))
+                }
+            ];
+
+            // Gambar Rak Kayu 3D & 4 Tabung Reaksi Kaca
+            ctx.fillStyle = '#7f5539';
+            ctx.beginPath();
+            ctx.roundRect(25, 345, 470, 26, 10);
+            ctx.fill();
+
+            tubes.forEach((t, idx) => {
+                const tx = 62 + idx * 118;
+                const ty = 70;
+                const tw = 64;
+                const th = 265;
+                const hex = rgbToHex(t.r, t.g, t.b);
+
+                // Bayangan belakang tabung
+                ctx.fillStyle = 'rgba(15,23,42,0.12)';
+                ctx.beginPath();
+                ctx.roundRect(tx + 5, ty + 5, tw, th, [8, 8, 32, 32]);
+                ctx.fill();
+
+                // Cairan di dalam tabung
+                ctx.fillStyle = hex;
+                ctx.beginPath();
+                ctx.roundRect(tx + 4, ty + 55, tw - 8, th - 59, [0, 0, 28, 28]);
+                ctx.fill();
+
+                // Meniskus elips atas cairan
+                ctx.fillStyle = hex;
+                ctx.filter = 'brightness(1.15)';
+                ctx.beginPath();
+                ctx.ellipse(tx + tw / 2, ty + 55, (tw - 8) / 2, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.filter = 'none';
+
+                // Dinding Kaca Tabung 3D
+                ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+                ctx.lineWidth = 3.5;
+                ctx.beginPath();
+                ctx.roundRect(tx, ty, tw, th, [6, 6, 32, 32]);
+                ctx.stroke();
+
+                // Bibir Kaca Atas
+                ctx.fillStyle = '#e2e8f0';
+                ctx.beginPath();
+                ctx.ellipse(tx + tw / 2, ty, tw / 2 + 4, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Highlight Kilau Kaca Vertikal
+                ctx.fillStyle = 'rgba(255,255,255,0.42)';
+                ctx.fillRect(tx + 10, ty + 15, 8, th - 45);
+
+                // Label Nama di Bawah Rak
+                ctx.fillStyle = '#0f172a';
+                ctx.font = '900 16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(t.label, tx + tw / 2, 392);
+
+                ctx.fillStyle = '#475569';
+                ctx.font = '700 12px sans-serif';
+                ctx.fillText(t.sub, tx + tw / 2, 412);
+            });
+        }
+
+        function showComplementDemo(pairIdx) {
+            playSound('drop');
+            const pairs = [
+                { c1: '#e6232d', c2: '#1eaf4b', res: '#61483b', text: 'Merah + Hijau (Kuning+Biru) menyatukan ketiga warna primer sehingga menghasilkan warna Cokelat Tua Bumi!' },
+                { c1: '#fcd70f', c2: '#8728af', res: '#785a46', text: 'Kuning + Ungu (Merah+Biru) saling menetralkan kecerahannya dan menghasilkan warna Cokelat Karamel Redup!' },
+                { c1: '#145fe1', c2: '#f8780f', res: '#57534e', text: 'Biru + Oranye (Merah+Kuning) membentuk campuran netral Cokelat Batu Keabu-abuan!' }
+            ];
+            const p = pairs[pairIdx];
+            document.getElementById('comp-sw-1').style.background = p.c1;
+            document.getElementById('comp-sw-2').style.background = p.c2;
+            document.getElementById('comp-sw-res').style.background = p.res;
+            document.getElementById('comp-text-desc').textContent = p.text;
+        }
+
+        /* ========================================================================
+           6. STATE & LOGIKA MEJA KERJA 3D (SLIDE 4 EKSPLORASI & SLIDE 5 TANTANGAN)
+           ======================================================================== */
+        const labState = {
+            free: {
+                drops: { R: 0, Y: 0, B: 0, W: 0, K: 0 },
+                displayRGB: { r: 222, g: 242, b: 252 },
+                fallingDrops: [],
+                ripples: [],
+                swirlSpeed: 0.02,
+                plumes: []
+            },
+            challenge: {
+                drops: { R: 0, Y: 0, B: 0, W: 0, K: 0 },
+                displayRGB: { r: 222, g: 242, b: 252 },
+                fallingDrops: [],
+                ripples: [],
+                swirlSpeed: 0.02,
+                plumes: []
+            },
+            savedSamples: []
+        };
+
+        // Render 5 Botol Pipet 3D di Slide 4 dan Slide 5
+        function renderDispenserRack(mode) {
+            const container = document.getElementById(`${mode}-dispenser-rack`);
+            if (!container) return;
+            container.innerHTML = '';
+
+            DYE_CHANNELS.forEach((ch, idx) => {
+                const count = labState[mode].drops[ch.key];
+                const card = document.createElement('div');
+                card.className = 'bottle-card';
+                card.innerHTML = `
+                    <div class="bottle-count-badge" id="badge-${mode}-${ch.key}">${count}</div>
+                    <div onclick="addDyeDrop('${mode}', '${ch.key}', ${idx})" title="Ketuk untuk meneteskan ${ch.name}">
+                        ${create3DPipetteBottleSVG(ch.hex, ch.topHex, ch.key)}
+                    </div>
+                    <div class="bottle-name">${ch.name}</div>
+                    <div class="bottle-sub">${ch.sub}</div>
+                    <div class="drop-stepper">
+                        <button class="mini-step-btn minus" onclick="event.stopPropagation(); removeDyeDrop('${mode}', '${ch.key}')" title="Kurangi 1 Tetes">−</button>
+                        <button class="mini-step-btn plus" onclick="event.stopPropagation(); addDyeDrop('${mode}', '${ch.key}', ${idx})" title="Tambah 1 Tetes">+</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function create3DPipetteBottleSVG(hexColor, lightHex, key) {
+            const strokeCol = key === 'W' ? '#94a3b8' : 'rgba(255,255,255,0.65)';
+            return `
+                <svg width="52" height="68" viewBox="0 0 64 86" fill="none">
+                    <!-- Karet Pipet Atas 3D -->
+                    <path d="M24 18C24 10 27 4 32 4C37 4 40 10 40 18H24Z" fill="#334155"/>
+                    <path d="M27 16C27 10 29 6 31 6" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Tutup Ulir Botol -->
+                    <rect x="20" y="18" width="24" height="9" rx="3" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/>
+                    <!-- Leher Kaca -->
+                    <rect x="25" y="27" width="14" height="8" fill="rgba(255,255,255,0.35)" stroke="#cbd5e1"/>
+                    <!-- Badan Botol Kaca 3D -->
+                    <rect x="12" y="34" width="40" height="44" rx="10" fill="rgba(255,255,255,0.2)" stroke="${strokeCol}" stroke-width="2"/>
+                    <!-- Isi Cairan Pigmen di Dalam Botol -->
+                    <rect x="14" y="44" width="36" height="32" rx="8" fill="${hexColor}"/>
+                    <ellipse cx="32" cy="44" rx="18" ry="4" fill="${lightHex}"/>
+                    <!-- Kilau Kaca Depan -->
+                    <rect x="17" y="38" width="5" height="32" rx="2.5" fill="rgba(255,255,255,0.55)"/>
+                    <!-- Tetesan Kecil di Bawah -->
+                    <path d="M32 80C32 80 28 84 32 85.5C36 84 32 80 32 80Z" fill="${hexColor}"/>
+                </svg>
+            `;
+        }
+
+        function addDyeDrop(mode, channelKey, bottleIndex = 2) {
+            const state = labState[mode];
+            if (state.drops[channelKey] >= 20) return; // Batas maksimum wajar per warna
+            state.drops[channelKey]++;
+            playSound('drop');
+
+            // Buat animasi tetesan 3D jatuh dari atas ke permukaan cairan
+            const dyeObj = DYE_CHANNELS.find(d => d.key === channelKey);
+            const startX = 175 + bottleIndex * 72;
+            state.fallingDrops.push({
+                x: startX,
+                y: 10,
+                targetX: 320 + (Math.random() * 80 - 40),
+                color: dyeObj.hex,
+                radius: 9
+            });
+
+            state.swirlSpeed = 0.14; // Percepat pusaran saat tetesan masuk
+            updateWorkbenchUI(mode);
+        }
+
+        function removeDyeDrop(mode, channelKey) {
+            const state = labState[mode];
+            if (state.drops[channelKey] <= 0) return;
+            state.drops[channelKey]--;
+            playSound('remove');
+            state.swirlSpeed = 0.08;
+            updateWorkbenchUI(mode);
+        }
+
+        function stirLiquid(mode) {
+            playSound('stir');
+            const state = labState[mode];
+            state.swirlSpeed = 0.24;
+            state.ripples.push({ x: 340, y: 210, r: 12, maxR: 130, alpha: 0.85, color: '#ffffff' });
+        }
+
+        function resetBeaker(mode) {
+            playSound('flush');
+            const state = labState[mode];
+            state.drops = { R: 0, Y: 0, B: 0, W: 0, K: 0 };
+            state.plumes = [];
+            state.ripples = [];
+            state.swirlSpeed = 0.18;
+            updateWorkbenchUI(mode);
+        }
+
+        function applyQuickRecipe(recipeObj) {
+            playSound('stir');
+            labState.free.drops = { ...recipeObj };
+            labState.free.swirlSpeed = 0.22;
+            updateWorkbenchUI('free');
+        }
+
+        function updateWorkbenchUI(mode) {
+            const state = labState[mode];
+            const drops = state.drops;
+            const total = drops.R + drops.Y + drops.B + drops.W + drops.K;
+
+            // Update badge angka pada botol pipet
+            DYE_CHANNELS.forEach(ch => {
+                const badge = document.getElementById(`badge-${mode}-${ch.key}`);
+                if (badge) badge.textContent = drops[ch.key];
+            });
+
+            const rgbResult = computeWetDyeRGB(drops);
+
+            if (mode === 'free') {
+                const info = classifyIndonesianColorName(drops);
+                document.getElementById('free-current-swatch').style.background = rgbResult.hex;
+                document.getElementById('free-color-name').textContent = info.name;
+                document.getElementById('free-color-cat').textContent = `${info.category} • Total ${total} Tetes`;
+                document.getElementById('free-scientific-note').textContent = info.note;
+
+                // Update grafik persentase komposisi
+                DYE_CHANNELS.forEach(ch => {
+                    const pct = total > 0 ? Math.round((drops[ch.key] / total) * 100) : 0;
+                    const bar = document.getElementById(`bar-free-${ch.key}`);
+                    const txt = document.getElementById(`pct-free-${ch.key}`);
+                    if (bar) bar.style.width = `${pct}%`;
+                    if (txt) txt.textContent = `${drops[ch.key]} (${pct}%)`;
+                });
+            } 
+            else if (mode === 'challenge') {
+                document.getElementById('compare-user-swatch').style.background = rgbResult.hex;
+
+                // Ringkasan teks tetesan siswa
+                if (total === 0) {
+                    document.getElementById('challenge-drops-summary').textContent = 'Belum ada tetesan pewarna (0 Tetes)';
+                } else {
+                    const parts = [];
+                    DYE_CHANNELS.forEach(ch => {
+                        if (drops[ch.key] > 0) parts.push(`${drops[ch.key]} ${ch.name}`);
+                    });
+                    document.getElementById('challenge-drops-summary').textContent = parts.join(' + ') + ` (Total ${total} Tetes)`;
+                }
+
+                // Hitung kemiripan real-time untuk ditampilkan di indikator
+                const sim = calculateChallengeSimilarity();
+                document.getElementById('challenge-similarity-text').textContent = `${sim}%`;
+                document.getElementById('challenge-similarity-bar').style.width = `${sim}%`;
+            }
+        }
+
+        /* ========================================================================
+           7. RAK TABUNG SAMPEL (SLIDE 4: SIMPAN & MUAT ULANG SAMPEL WARNA)
+           ======================================================================== */
+        function saveSampleToRack() {
+            const drops = labState.free.drops;
+            const total = drops.R + drops.Y + drops.B + drops.W + drops.K;
+            if (total === 0) {
+                playSound('wrong');
+                return;
+            }
+            playSound('correct');
+            const rgb = computeWetDyeRGB(drops);
+            const info = classifyIndonesianColorName(drops);
+
+            if (labState.savedSamples.length >= 6) {
+                labState.savedSamples.shift();
+            }
+            labState.savedSamples.push({
+                drops: { ...drops },
+                hex: rgb.hex,
+                name: info.name
+            });
+            renderSampleRack();
+        }
+
+        function clearSampleRack() {
+            playSound('flush');
+            labState.savedSamples = [];
+            renderSampleRack();
+        }
+
+        function renderSampleRack() {
+            const grid = document.getElementById('sample-rack-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 6; i++) {
+                const item = labState.savedSamples[i];
+                const slot = document.createElement('div');
+                if (item) {
+                    slot.className = 'sample-tube-slot filled';
+                    slot.title = 'Ketuk untuk memuat sampel ini ke Gelas Kimia';
+                    slot.onclick = () => {
+                        playSound('drop');
+                        labState.free.drops = { ...item.drops };
+                        labState.free.swirlSpeed = 0.2;
+                        updateWorkbenchUI('free');
+                    };
+                    slot.innerHTML = `
+                        <svg width="30" height="46" viewBox="0 0 36 58">
+                            <rect x="8" y="4" width="20" height="50" rx="10" fill="rgba(226,232,240,0.5)" stroke="#64748b" stroke-width="2"/>
+                            <rect x="10" y="18" width="16" height="34" rx="8" fill="${item.hex}"/>
+                            <rect x="12" y="8" width="3" height="38" rx="1.5" fill="rgba(255,255,255,0.65)"/>
+                            <ellipse cx="18" cy="4" rx="12" ry="3" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/>
+                        </svg>
+                        <div style="font-size: 10.5px; font-weight: 800; color: #0f172a; text-align: center; margin-top: 3px; line-height: 1.15;">
+                            ${item.name}
+                        </div>
+                    `;
+                } else {
+                    slot.className = 'sample-tube-slot';
+                    slot.innerHTML = `
+                        <div style="font-size: 18px; opacity: 0.35;">🧪</div>
+                        <div style="font-size: 10.5px; color: #64748b; font-weight: 700; margin-top: 2px;">Slot Kosong ${i + 1}</div>
+                    `;
+                }
+                grid.appendChild(slot);
+            }
+        }
+
+        /* ========================================================================
+           8. SLIDE 5: 10 LEVEL TANTANGAN PENCOCOKAN WARNA (ADAPTASI AMIGOKI)
+           ======================================================================== */
+        const CHALLENGE_MISSIONS = [
+            {
+                level: 1,
+                title: 'Misi 1: Jingga Matahari Sore',
+                difficulty: 'Level 1 • Warna Sekunder',
+                story: 'Raciklah warna Oranye (Jingga) segar dengan mencampurkan dua warna primer dalam takaran yang sama!',
+                targetDrops: { R: 1, Y: 1, B: 0, W: 0, K: 0 },
+                hint: 'Campurkan 1 tetes Merah + 1 tetes Kuning.'
+            },
+            {
+                level: 2,
+                title: 'Misi 2: Hijau Daun Zamrud',
+                difficulty: 'Level 2 • Warna Sekunder',
+                story: 'Buatlah cairan pewarna Hijau Zamrud untuk mewarnai miniatur pepohonan di laboratorium!',
+                targetDrops: { R: 0, Y: 1, B: 1, W: 0, K: 0 },
+                hint: 'Campurkan 1 tetes Kuning + 1 tetes Biru.'
+            },
+            {
+                level: 3,
+                title: 'Misi 3: Ungu Bunga Anggrek',
+                difficulty: 'Level 3 • Warna Sekunder',
+                story: 'Kita membutuhkan cairan warna Ungu (Violet) murni. Dua warna primer apakah yang harus dicampur?',
+                targetDrops: { R: 1, Y: 0, B: 1, W: 0, K: 0 },
+                hint: 'Campurkan 1 tetes Merah + 1 tetes Biru.'
+            },
+            {
+                level: 4,
+                title: 'Misi 4: Merah Muda Permen (Tint)',
+                difficulty: 'Level 4 • Konsep Tint (+Putih)',
+                story: 'Ubah warna primer Merah menjadi warna Merah Muda (Pink Pastel) yang lembut menggunakan pewarna Putih!',
+                targetDrops: { R: 1, Y: 0, B: 0, W: 2, K: 0 },
+                hint: 'Campurkan 1 tetes Merah + 2 tetes Putih.'
+            },
+            {
+                level: 5,
+                title: 'Misi 5: Biru Langit Cerah (Tint)',
+                difficulty: 'Level 5 • Konsep Tint (+Putih)',
+                story: 'Buatlah warna Biru Muda seperti langit siang yang cerah dengan mencampurkan Biru dan Putih secara seimbang!',
+                targetDrops: { R: 0, Y: 0, B: 1, W: 1, K: 0 },
+                hint: 'Campurkan 1 tetes Biru + 1 tetes Putih.'
+            },
+            {
+                level: 6,
+                title: 'Misi 6: Hijau Pupus Daun Muda (Tersier)',
+                difficulty: 'Level 6 • Warna Tersier',
+                story: 'Raciklah warna Tersier Kuning-Hijau! Ingat, takaran Kuning harus dua kali lipat lebih banyak dari Biru.',
+                targetDrops: { R: 0, Y: 2, B: 1, W: 0, K: 0 },
+                hint: 'Campurkan 2 tetes Kuning + 1 tetes Biru.'
+            },
+            {
+                level: 7,
+                title: 'Misi 7: Biru Laut Toska (Tersier)',
+                difficulty: 'Level 7 • Warna Tersier',
+                story: 'Buatlah warna Biru-Hijau (Toska) dengan takaran pewarna Biru lebih dominan daripada Kuning!',
+                targetDrops: { R: 0, Y: 1, B: 2, W: 0, K: 0 },
+                hint: 'Campurkan 1 tetes Kuning + 2 tetes Biru.'
+            },
+            {
+                level: 8,
+                title: 'Misi 8: Ungu Lavender Pastel',
+                difficulty: 'Level 8 • Sekunder + Tint',
+                story: 'Buatlah warna Ungu terlebih dahulu, lalu terangkan warnanya dengan pewarna Putih agar menjadi Ungu Lavender!',
+                targetDrops: { R: 1, Y: 0, B: 1, W: 2, K: 0 },
+                hint: 'Campurkan 1 Merah + 1 Biru + 2 Putih.'
+            },
+            {
+                level: 9,
+                title: 'Misi 9: Biru Dongker Malam (Shade)',
+                difficulty: 'Level 9 • Konsep Shade (+Hitam)',
+                story: 'Gelapkan warna Biru menggunakan sedikit tetesan Hitam untuk menghasilkan warna Biru Dongker (Navy)!',
+                targetDrops: { R: 0, Y: 0, B: 2, W: 0, K: 1 },
+                hint: 'Campurkan 2 tetes Biru + 1 tetes Hitam.'
+            },
+            {
+                level: 10,
+                title: 'Misi 10: Cokelat Tanah Subur',
+                difficulty: 'Level 10 • Master Pigmen',
+                story: 'Tantangan Master! Campurkan ketiga warna primer (Merah, Kuning, Biru) untuk menghasilkan warna Cokelat Bumi.',
+                targetDrops: { R: 1, Y: 1, B: 1, W: 0, K: 0 },
+                hint: 'Campurkan 1 Merah + 1 Kuning + 1 Biru (atau kelipatannya yang seimbang).'
+            }
+        ];
+
+        let currentChallengeIdx = 0;
+        let challengeStars = new Array(10).fill(0);
+
+        function renderChallengeLevelButtons() {
+            const grid = document.getElementById('challenge-level-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            CHALLENGE_MISSIONS.forEach((m, idx) => {
+                const stars = challengeStars[idx];
+                const btn = document.createElement('button');
+                btn.className = `level-btn ${idx === currentChallengeIdx ? 'active' : ''} ${stars > 0 ? 'completed' : ''}`;
+                btn.onclick = () => selectChallengeLevel(idx);
+                btn.innerHTML = `Lv.${m.level}<br><span style="font-size:10px;">${stars > 0 ? '⭐'.repeat(stars) : '⚪'}</span>`;
+                grid.appendChild(btn);
+            });
+
+            const totalStars = challengeStars.reduce((a, b) => a + b, 0);
+            document.getElementById('challenge-stars-total').textContent = `⭐ ${totalStars} / 30`;
+        }
+
+        function selectChallengeLevel(idx) {
+            playSound('click');
+            currentChallengeIdx = idx;
+            const mission = CHALLENGE_MISSIONS[idx];
+            const targetRGB = computeWetDyeRGB(mission.targetDrops);
+            const targetInfo = classifyIndonesianColorName(mission.targetDrops);
+            const sumDrops = Object.values(mission.targetDrops).reduce((a, b) => a + b, 0);
+
+            document.getElementById('mission-difficulty-badge').textContent = mission.difficulty;
+            document.getElementById('mission-target-drops-hint').textContent = `Rasio Dasar: ${sumDrops} Tetes`;
+            document.getElementById('mission-title').textContent = mission.title;
+            document.getElementById('mission-story').textContent = mission.story;
+            document.getElementById('mission-target-label').textContent = targetInfo.name;
+            document.getElementById('compare-target-swatch').style.background = targetRGB.hex;
+            document.getElementById('mission-hint-box').innerHTML = `🔍 <strong>Petunjuk Ilmuwan:</strong> Tekan tombol "Lihat Petunjuk Resep" jika kamu membutuhkan bantuan!`;
+
+            resetBeaker('challenge');
+            renderChallengeLevelButtons();
+            drawTargetSampleFlask();
+        }
+
+        function showMissionHint() {
+            playSound('click');
+            const mission = CHALLENGE_MISSIONS[currentChallengeIdx];
+            document.getElementById('mission-hint-box').innerHTML = `💡 <strong>Bocoran Resep Lab:</strong> ${mission.hint}`;
+        }
+
+        // Gambar Labu Erlenmeyer / Tabung Sampel Target 3D di Slide 5
+        function drawTargetSampleFlask() {
+            const canvas = document.getElementById('target-flask-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const mission = CHALLENGE_MISSIONS[currentChallengeIdx];
+            const targetRGB = computeWetDyeRGB(mission.targetDrops);
+
+            // Gambar Labu Kaca 3D (Disesuaikan dengan ukuran 95x105)
+            ctx.save();
+            ctx.scale(0.84, 0.84);
+            // Cairan Target di dalam labu
+            ctx.fillStyle = targetRGB.hex;
+            ctx.beginPath();
+            ctx.moveTo(35, 58);
+            ctx.lineTo(75, 58);
+            ctx.lineTo(94, 104);
+            ctx.quadraticCurveTo(96, 114, 84, 114);
+            ctx.lineTo(26, 114);
+            ctx.quadraticCurveTo(14, 114, 16, 104);
+            ctx.closePath();
+            ctx.fill();
+
+            // Meniskus atas cairan
+            ctx.fillStyle = targetRGB.hex;
+            ctx.filter = 'brightness(1.18)';
+            ctx.beginPath();
+            ctx.ellipse(55, 58, 20, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.filter = 'none';
+
+            // Garis Kaca Labu Erlenmeyer
+            ctx.strokeStyle = 'rgba(255,255,255,0.88)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(42, 16);
+            ctx.lineTo(42, 42);
+            ctx.lineTo(14, 104);
+            ctx.quadraticCurveTo(11, 116, 25, 116);
+            ctx.lineTo(85, 116);
+            ctx.quadraticCurveTo(99, 116, 96, 104);
+            ctx.lineTo(68, 42);
+            ctx.lineTo(68, 16);
+            ctx.stroke();
+
+            // Bibir Labu
+            ctx.fillStyle = '#e2e8f0';
+            ctx.beginPath();
+            ctx.ellipse(55, 16, 15, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Kilau Kaca
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(38, 55);
+            ctx.lineTo(24, 100);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function calculateChallengeSimilarity() {
+            const userDrops = labState.challenge.drops;
+            const totalUser = Object.values(userDrops).reduce((a, b) => a + b, 0);
+            if (totalUser === 0) return 0;
+
+            const mission = CHALLENGE_MISSIONS[currentChallengeIdx];
+            const targetRGB = computeWetDyeRGB(mission.targetDrops);
+            const userRGB = computeWetDyeRGB(userDrops);
+
+            // Cek kesamaan rasio proporsi resep terlebih dahulu
+            const totalTarget = Object.values(mission.targetDrops).reduce((a, b) => a + b, 0);
+            let ratioError = 0;
+            DYE_CHANNELS.forEach(ch => {
+                const pTarget = mission.targetDrops[ch.key] / totalTarget;
+                const pUser = userDrops[ch.key] / totalUser;
+                ratioError += Math.abs(pTarget - pUser);
+            });
+
+            if (ratioError < 0.001) return 100;
+
+            // Jarak Euclidean terboboti dalam ruang warna RGB + kemiripan rasio
+            const dr = targetRGB.r - userRGB.r;
+            const dg = targetRGB.g - userRGB.g;
+            const db = targetRGB.b - userRGB.b;
+            const distRGB = Math.sqrt(dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11);
+            const maxDist = 195;
+
+            const rgbSim = Math.max(0, 100 - (distRGB / maxDist) * 100);
+            const ratioSim = Math.max(0, 100 - (ratioError / 2) * 100);
+
+            return Math.round(rgbSim * 0.65 + ratioSim * 0.35);
+        }
+
+        function evaluateChallengeMatch() {
+            const sim = calculateChallengeSimilarity();
+            const mission = CHALLENGE_MISSIONS[currentChallengeIdx];
+            const targetRGB = computeWetDyeRGB(mission.targetDrops);
+            const userRGB = computeWetDyeRGB(labState.challenge.drops);
+
+            document.getElementById('modal-target-swatch').style.background = targetRGB.hex;
+            document.getElementById('modal-user-swatch').style.background = userRGB.hex;
+            document.getElementById('modal-accuracy-pill').textContent = `Kemiripan Warna: ${sim}%`;
+
+            const modal = document.getElementById('custom-modal-overlay');
+            const nextBtn = document.getElementById('modal-next-level-btn');
+
+            if (sim >= 85) {
+                playSound('correct');
+                const stars = sim >= 98 ? 3 : (sim >= 92 ? 2 : 1);
+                if (stars > challengeStars[currentChallengeIdx]) {
+                    challengeStars[currentChallengeIdx] = stars;
+                }
+                renderChallengeLevelButtons();
+
+                document.getElementById('modal-badge-icon').textContent = sim === 100 ? '🏆' : '🎉';
+                document.getElementById('modal-title').textContent = sim === 100 ? 'Sempurna! 100% Akurat!' : 'Misi Berhasil!';
+                document.getElementById('modal-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+                document.getElementById('modal-message').textContent = `Hebat sekali! Larutan pewarna basah racikanmu cocok dengan Sampel Target (${mission.hint}).`;
+                nextBtn.style.display = currentChallengeIdx < CHALLENGE_MISSIONS.length - 1 ? 'inline-flex' : 'none';
+            } else {
+                playSound('wrong');
+                document.getElementById('modal-badge-icon').textContent = '🧐';
+                document.getElementById('modal-title').textContent = 'Belum Sama Persis!';
+                document.getElementById('modal-stars').textContent = '☆☆☆';
+                document.getElementById('modal-message').textContent = `Kemiripan warnamu baru ${sim}% (butuh minimal 85%). Coba perhatikan petunjuk resep: ${mission.hint}`;
+                nextBtn.style.display = 'none';
+            }
+
+            modal.classList.add('show');
+        }
+
+        function closeCustomModal() {
+            playSound('click');
+            document.getElementById('custom-modal-overlay').classList.remove('show');
+        }
+
+        function openInfoModal() {
+            playSound('click');
+            document.getElementById('info-modal-overlay').classList.add('show');
+        }
+
+        function closeInfoModal() {
+            playSound('click');
+            document.getElementById('info-modal-overlay').classList.remove('show');
+        }
+
+        function goToNextChallengeLevel() {
+            closeCustomModal();
+            if (currentChallengeIdx < CHALLENGE_MISSIONS.length - 1) {
+                selectChallengeLevel(currentChallengeIdx + 1);
+            }
+        }
+
+        /* ========================================================================
+           9. SLIDE 6: KUIS EVALUASI INTERAKTIF (8 SOAL)
+           ======================================================================== */
+        const QUIZ_QUESTIONS = [
+            {
+                q: 'Manakah di bawah ini yang merupakan tiga Warna Primer (warna biang utama) pada pewarna basah?',
+                swatch: '#e6232d',
+                icon: '🎨',
+                options: [
+                    'Merah, Kuning, dan Biru',
+                    'Merah, Hijau, dan Ungu',
+                    'Kuning, Oranye, dan Hijau',
+                    'Putih, Hitam, dan Abu-abu'
+                ],
+                answer: 0,
+                explain: 'Tepat! Merah, Kuning, dan Biru adalah 3 Warna Primer pigmen yang menjadi induk semua warna lain.'
+            },
+            {
+                q: 'Jika kamu meneteskan 2 tetes pewarna Kuning dan 2 tetes pewarna Biru ke dalam gelas kimia, warna Sekunder apakah yang terbentuk?',
+                swatch: '#1eaf4b',
+                icon: '🧪',
+                options: [
+                    'Oranye (Jingga)',
+                    'Ungu (Violet)',
+                    'Hijau Zamrud',
+                    'Cokelat Tanah'
+                ],
+                answer: 2,
+                explain: 'Benar! Kuning + Biru dalam takaran seimbang menghasilkan warna sekunder Hijau.'
+            },
+            {
+                q: 'Dalam teori pewarna basah, penambahan pewarna Putih ke dalam warna murni untuk menghasilkan warna pastel yang lebih terang disebut...',
+                swatch: '#fbcfe8',
+                icon: '⚪',
+                options: [
+                    'Shade (Bayangan Gelap)',
+                    'Tint (Penerangan Warna)',
+                    'Komplementer',
+                    'Primer'
+                ],
+                answer: 1,
+                explain: 'Betul sekali! Campuran warna murni (Hue) + Putih disebut TINT (contoh: Merah + Putih = Merah Muda/Pink).'
+            },
+            {
+                q: 'Rani ingin membuat warna Biru Dongker (Biru Gelap) untuk mewarnai gambar langit malam. Pewarna apakah yang harus ditambahkan Rani ke dalam larutan Biru?',
+                swatch: '#1e3a8a',
+                icon: '⚫',
+                options: [
+                    'Sedikit tetesan Hitam (Shade)',
+                    'Banyak tetesan Putih (Tint)',
+                    'Tetesan Kuning murni',
+                    'Air jernih saja'
+                ],
+                answer: 0,
+                explain: 'Tepat! Menambahkan sedikit pewarna Hitam menghasilkan efek SHADE (warna menjadi lebih tua/gelap).'
+            },
+            {
+                q: 'Untuk membuat warna Tersier "Kuning-Oranye", perbandingan tetesan pewarna yang paling tepat adalah...',
+                swatch: '#faaa0f',
+                icon: '🍊',
+                options: [
+                    '2 Tetes Kuning + 1 Tetes Merah',
+                    '2 Tetes Biru + 1 Tetes Kuning',
+                    '1 Tetes Merah + 2 Tetes Biru',
+                    '1 Tetes Putih + 1 Tetes Hitam'
+                ],
+                answer: 0,
+                explain: 'Hebat! Kuning-Oranye dibuat dari campuran Merah dan Kuning dengan takaran Kuning lebih banyak (2 Kuning : 1 Merah).'
+            },
+            {
+                q: 'Kelompok warna yang memberikan kesan sejuk, tenang seperti air dan pepohonan (Hijau, Biru, Ungu) disebut...',
+                swatch: '#0ea5e9',
+                icon: '❄️',
+                options: [
+                    'Warna Hangat (Warm Colors)',
+                    'Warna Dingin (Cool Colors)',
+                    'Warna Netral Monokrom',
+                    'Warna Panas Api'
+                ],
+                answer: 1,
+                explain: 'Benar! Hijau, Biru, dan Ungu termasuk kelompok Warna Dingin (Cool Colors).'
+            },
+            {
+                q: 'Apa yang terjadi jika ketiga warna primer (Merah, Kuning, dan Biru) dicampurkan bersama-sama di dalam gelas kimia?',
+                swatch: '#664836',
+                icon: '🍫',
+                options: [
+                    'Menjadi air bening tak berwarna',
+                    'Menghasilkan warna Cokelat / Gelap Netral',
+                    'Menghasilkan warna Kuning Terang',
+                    'Menghasilkan warna Putih Susu'
+                ],
+                answer: 1,
+                explain: 'Tepat! Percampuran subtraktif ketiga warna primer (Merah + Kuning + Biru) menghasilkan warna Cokelat.'
+            },
+            {
+                q: 'Budi mencampurkan 1 tetes Merah, 1 tetes Biru, dan 2 tetes Putih. Warna apakah yang akan dihasilkan Budi?',
+                swatch: '#c084fc',
+                icon: '🌸',
+                options: [
+                    'Hijau Muda Pastel',
+                    'Ungu Muda (Lavender)',
+                    'Oranye Muda Persik',
+                    'Abu-abu Muda'
+                ],
+                answer: 1,
+                explain: 'Luar biasa! Merah + Biru menghasilkan Ungu, lalu ditambah Putih menjadi Ungu Muda (Lavender).'
+            }
+        ];
+
+        let currentQuizIndex = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+
+        function renderQuizQuestion() {
+            const qObj = QUIZ_QUESTIONS[currentQuizIndex];
+            quizAnswered = false;
+
+            document.getElementById('quiz-progress-badge').textContent = `Soal ${currentQuizIndex + 1} / ${QUIZ_QUESTIONS.length}`;
+            document.getElementById('quiz-visual-swatch').style.background = qObj.swatch;
+            document.getElementById('quiz-visual-swatch').textContent = qObj.icon;
+            document.getElementById('quiz-question-text').textContent = qObj.q;
+            document.getElementById('quiz-feedback-text').textContent = 'Pilih salah satu jawaban yang paling tepat!';
+            document.getElementById('quiz-feedback-text').style.color = '#334155';
+            document.getElementById('btn-next-quiz').style.display = 'none';
+
+            const container = document.getElementById('quiz-options-container');
+            container.innerHTML = '';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            qObj.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option-btn';
+                btn.innerHTML = `
+                    <span style="width:36px; height:36px; border-radius:10px; background:#0f172a; color:#ffd166; display:flex; align-items:center; justify-content:center; font-weight:900;">${letters[idx]}</span>
+                    <span>${optText}</span>
+                `;
+                btn.onclick = () => selectQuizAnswer(idx, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectQuizAnswer(selectedIdx, btnElement) {
+            if (quizAnswered) return;
+            quizAnswered = true;
+
+            const qObj = QUIZ_QUESTIONS[currentQuizIndex];
+            const allBtns = document.querySelectorAll('#quiz-options-container .quiz-option-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (selectedIdx === qObj.answer) {
+                playSound('correct');
+                btnElement.classList.add('correct');
+                quizScore += 12.5;
+                document.getElementById('quiz-feedback-text').textContent = '✅ ' + qObj.explain;
+                document.getElementById('quiz-feedback-text').style.color = '#059669';
+            } else {
+                playSound('wrong');
+                btnElement.classList.add('wrong');
+                allBtns[qObj.answer].classList.add('correct');
+                document.getElementById('quiz-feedback-text').textContent = '❌ Kurang tepat. ' + qObj.explain;
+                document.getElementById('quiz-feedback-text').style.color = '#dc2626';
+            }
+
+            updateFinalReportCard();
+
+            if (currentQuizIndex < QUIZ_QUESTIONS.length - 1) {
+                document.getElementById('btn-next-quiz').style.display = 'inline-flex';
+            } else {
+                document.getElementById('quiz-feedback-text').textContent += ' 🎉 Semua soal kuis selesai!';
+            }
+        }
+
+        function nextQuizQuestion() {
+            playSound('click');
+            if (currentQuizIndex < QUIZ_QUESTIONS.length - 1) {
+                currentQuizIndex++;
+                renderQuizQuestion();
+            }
+        }
+
+        function restartQuiz() {
+            playSound('click');
+            currentQuizIndex = 0;
+            quizScore = 0;
+            renderQuizQuestion();
+            updateFinalReportCard();
+        }
+
+        function updateFinalReportCard() {
+            const missionsDone = challengeStars.filter(s => s > 0).length;
+            const totalStars = challengeStars.reduce((a, b) => a + b, 0);
+            const roundedQuiz = Math.round(quizScore);
+
+            document.getElementById('report-missions-done').textContent = `${missionsDone} / 10 Misi`;
+            document.getElementById('report-stars-earned').textContent = `⭐ ${totalStars} / 30`;
+            document.getElementById('report-quiz-score').textContent = `${roundedQuiz} / 100`;
+            document.getElementById('report-samples-saved').textContent = `${labState.savedSamples.length} Tabung`;
+
+            let rank = 'Ilmuwan Pemula Warna';
+            const combinedScore = totalStars * 2 + roundedQuiz;
+            if (combinedScore >= 130) rank = '🏆 Profesor Master Kimia Warna SD';
+            else if (combinedScore >= 90) rank = '🌟 Ahli Spesialis Pigmen Basah';
+            else if (combinedScore >= 45) rank = '🔬 Peneliti Muda Laboratorium';
+
+            document.getElementById('student-rank-title').textContent = rank;
+        }
+
+        /* ========================================================================
+           10. ENGINE RENDERER GELAS KIMIA 3D REALISTIK (HTML5 CANVAS 60FPS)
+               Menggambar Gelas Silinder 3D, Meniskus Cairan, Tetesan Jatuh, Pusaran & Gelembung
+           ======================================================================== */
+        let animTick = 0;
+        let heroAutoDrops = [
+            { x: 300, y: 40, vy: 5, color: '#e6232d' }
+        ];
+        let heroColorIndex = 0;
+        const HERO_CYCLE_COLORS = [
+            { hex: '#e6232d', r: 230, g: 35, b: 45 },
+            { hex: '#f8780f', r: 248, g: 120, b: 15 },
+            { hex: '#fcd70f', r: 252, g: 215, b: 15 },
+            { hex: '#1eaf4b', r: 30, g: 175, b: 75 },
+            { hex: '#145fe1', r: 20, g: 95, b: 225 },
+            { hex: '#8728af', r: 135, g: 40, b: 175 }
+        ];
+        let heroCurrentRGB = { r: 30, g: 175, b: 75 };
+        let heroTargetRGB = { r: 30, g: 175, b: 75 };
+
+        function triggerHeroSplash() {
+            playSound('drop');
+            heroColorIndex = (heroColorIndex + 1) % HERO_CYCLE_COLORS.length;
+            const c = HERO_CYCLE_COLORS[heroColorIndex];
+            heroAutoDrops.push({
+                x: 300 + (Math.random() * 60 - 30),
+                y: 20,
+                vy: 6,
+                color: c.hex,
+                targetRGB: c
+            });
+        }
+
+        function render3DBeakerOnCanvas(canvasId, state) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width;
+            const H = canvas.height;
+            ctx.clearRect(0, 0, W, H);
+
+            // Hitung warna target dari tetesan
+            const target = computeWetDyeRGB(state.drops);
+            // Interpolasi halus (animasi larutan menyatu saat diaduk)
+            state.displayRGB.r += (target.r - state.displayRGB.r) * 0.08;
+            state.displayRGB.g += (target.g - state.displayRGB.g) * 0.08;
+            state.displayRGB.b += (target.b - state.displayRGB.b) * 0.08;
+
+            const r = Math.round(state.displayRGB.r);
+            const g = Math.round(state.displayRGB.g);
+            const b = Math.round(state.displayRGB.b);
+
+            const totalDrops = Object.values(state.drops).reduce((a, v) => a + v, 0);
+
+            // Dimensi Gelas Kimia 3D Proporsional di tengah Kanvas (640 x 360)
+            const cx = W / 2;
+            const beakerW = 260;
+            const beakerTopY = 54;
+            const beakerBotY = 304;
+            const rx = beakerW / 2;
+            const ry = 22; // Elips perspektif 3D
+
+            // Tinggi permukaan cairan (naik sesuai jumlah tetesan, minimal dasar air)
+            const fillRatio = totalDrops === 0 ? 0.32 : Math.min(0.86, 0.38 + totalDrops * 0.035);
+            const liquidSurfaceY = beakerBotY - (beakerBotY - beakerTopY) * fillRatio;
+
+            // 1. Dudukan Magnetic Stirrer 3D di bawah Gelas Kimia
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.beginPath();
+            ctx.ellipse(cx, beakerBotY + 30, rx + 34, ry + 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const baseGrad = ctx.createLinearGradient(cx - rx - 22, 0, cx + rx + 22, 0);
+            baseGrad.addColorStop(0, '#334155');
+            baseGrad.addColorStop(0.5, '#64748b');
+            baseGrad.addColorStop(1, '#1e293b');
+            ctx.fillStyle = baseGrad;
+            ctx.beginPath();
+            ctx.roundRect(cx - rx - 20, beakerBotY + 2, (rx + 20) * 2, 28, 12);
+            ctx.fill();
+
+            // Pelat Atas Stirrer
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.ellipse(cx, beakerBotY + 4, rx + 14, ry + 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // 2. Dinding Belakang Gelas Kaca
+            ctx.save();
+            const backGlassGrad = ctx.createLinearGradient(cx - rx, 0, cx + rx, 0);
+            backGlassGrad.addColorStop(0, 'rgba(255,255,255,0.22)');
+            backGlassGrad.addColorStop(0.5, 'rgba(255,255,255,0.08)');
+            backGlassGrad.addColorStop(1, 'rgba(255,255,255,0.25)');
+            ctx.fillStyle = backGlassGrad;
+            ctx.beginPath();
+            ctx.moveTo(cx - rx, beakerTopY);
+            ctx.lineTo(cx - rx, beakerBotY);
+            ctx.ellipse(cx, beakerBotY, rx, ry, 0, Math.PI, 0, true);
+            ctx.lineTo(cx + rx, beakerTopY);
+            ctx.ellipse(cx, beakerTopY, rx, ry, 0, 0, Math.PI, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // 3. Volume Silinder Cairan 3D
+            ctx.save();
+            const liqAlpha = totalDrops === 0 ? 0.42 : 0.92;
+            const bodyGrad = ctx.createLinearGradient(cx - rx, 0, cx + rx, 0);
+            bodyGrad.addColorStop(0, `rgba(${Math.max(0, r - 35)}, ${Math.max(0, g - 35)}, ${Math.max(0, b - 35)}, ${liqAlpha})`);
+            bodyGrad.addColorStop(0.38, `rgba(${Math.min(255, r + 15)}, ${Math.min(255, g + 15)}, ${Math.min(255, b + 15)}, ${liqAlpha})`);
+            bodyGrad.addColorStop(1, `rgba(${Math.max(0, r - 50)}, ${Math.max(0, g - 50)}, ${Math.max(0, b - 50)}, ${liqAlpha})`);
+
+            ctx.fillStyle = bodyGrad;
+            ctx.beginPath();
+            ctx.moveTo(cx - rx + 4, liquidSurfaceY);
+            ctx.lineTo(cx - rx + 4, beakerBotY - 2);
+            ctx.ellipse(cx, beakerBotY - 2, rx - 4, ry - 2, 0, Math.PI, 0, true);
+            ctx.lineTo(cx + rx - 4, liquidSurfaceY);
+            ctx.ellipse(cx, liquidSurfaceY, rx - 4, ry - 2, 0, 0, Math.PI, false);
+            ctx.closePath();
+            ctx.fill();
+
+            // Kapsul Pengaduk Magnetik Berputar di Dasar Gelas
+            const stirAngle = animTick * (0.08 + state.swirlSpeed * 2);
+            const pillLen = Math.cos(stirAngle) * 24;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(cx - pillLen, beakerBotY - 4);
+            ctx.lineTo(cx + pillLen, beakerBotY - 4);
+            ctx.stroke();
+
+            // Pita Pusaran Vortex 3D di Dalam Cairan
+            if (state.swirlSpeed > 0.025) {
+                state.swirlSpeed *= 0.985;
+            }
+            ctx.strokeStyle = 'rgba(255,255,255,0.26)';
+            ctx.lineWidth = 2.5;
+            for (let s = 0; s < 3; s++) {
+                const sy = liquidSurfaceY + 20 + s * 30;
+                if (sy < beakerBotY - 16) {
+                    const sRad = (rx - 32) * (1 - s * 0.22);
+                    const phase = animTick * 0.12 + s;
+                    ctx.beginPath();
+                    ctx.ellipse(cx, sy, sRad, 7, 0, phase, phase + Math.PI * 1.25);
+                    ctx.stroke();
+                }
+            }
+
+            // Plume / Jejak Kepulan Pigmen Baru Masuk
+            for (let i = state.plumes.length - 1; i >= 0; i--) {
+                const p = state.plumes[i];
+                p.y += 1.2;
+                p.r += 1.3;
+                p.alpha *= 0.95;
+                p.x += Math.sin(animTick * 0.15 + i) * 2.2;
+
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, Math.min(beakerBotY - 18, p.y), p.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                if (p.alpha < 0.04) state.plumes.splice(i, 1);
+            }
+
+            // Permukaan Meniskus Elips Atas Cairan
+            const topSurfaceGrad = ctx.createRadialGradient(cx - 18, liquidSurfaceY - 4, 8, cx, liquidSurfaceY, rx);
+            topSurfaceGrad.addColorStop(0, `rgba(${Math.min(255, r + 42)}, ${Math.min(255, g + 42)}, ${Math.min(255, b + 42)}, ${liqAlpha})`);
+            topSurfaceGrad.addColorStop(1, `rgba(${Math.max(0, r - 20)}, ${Math.max(0, g - 20)}, ${Math.max(0, b - 20)}, ${liqAlpha})`);
+
+            ctx.fillStyle = topSurfaceGrad;
+            ctx.beginPath();
+            ctx.ellipse(cx, liquidSurfaceY, rx - 4, ry - 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Riak Gelombang Permukaan (Ripples)
+            for (let i = state.ripples.length - 1; i >= 0; i--) {
+                const rp = state.ripples[i];
+                rp.r += 2.4;
+                rp.alpha *= 0.93;
+                ctx.strokeStyle = `rgba(255,255,255,${rp.alpha})`;
+                ctx.lineWidth = 2.2;
+                ctx.beginPath();
+                ctx.ellipse(rp.x, liquidSurfaceY, Math.min(rx - 10, rp.r), Math.min(ry - 4, rp.r * 0.22), 0, 0, Math.PI * 2);
+                ctx.stroke();
+                if (rp.alpha < 0.04) state.ripples.splice(i, 1);
+            }
+            ctx.restore();
+
+            // 4. Tetesan Pewarna Jatuh dari Botol Pipet ke Cairan
+            for (let i = state.fallingDrops.length - 1; i >= 0; i--) {
+                const fd = state.fallingDrops[i];
+                fd.y += 10;
+                fd.x += (fd.targetX - fd.x) * 0.15;
+
+                // Gambar bentuk tetesan air 3D
+                ctx.save();
+                ctx.fillStyle = fd.color;
+                ctx.beginPath();
+                ctx.arc(fd.x, fd.y, fd.radius, 0, Math.PI * 2);
+                ctx.moveTo(fd.x - fd.radius, fd.y);
+                ctx.lineTo(fd.x, fd.y - fd.radius * 1.9);
+                ctx.lineTo(fd.x + fd.radius, fd.y);
+                ctx.fill();
+
+                // Titik kilau putih pada tetesan
+                ctx.fillStyle = 'rgba(255,255,255,0.75)';
+                ctx.beginPath();
+                ctx.arc(fd.x - 2.5, fd.y - 2, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (fd.y >= liquidSurfaceY) {
+                    state.ripples.push({ x: fd.x, y: liquidSurfaceY, r: 6, alpha: 0.95 });
+                    state.plumes.push({ x: fd.x, y: liquidSurfaceY + 8, r: 12, alpha: 0.75, color: fd.color });
+                    state.fallingDrops.splice(i, 1);
+                }
+            }
+
+            // 5. Dinding Kaca Depan, Garis Takaran Mililiter (mL) & Kilau Spesular 3D
+            ctx.save();
+            // Garis skala ukuran laboratorium (100mL - 400mL)
+            ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.lineWidth = 2;
+            for (let ml = 1; ml <= 4; ml++) {
+                const my = beakerBotY - ml * 48;
+                ctx.beginPath();
+                ctx.moveTo(cx + rx - 46, my);
+                ctx.lineTo(cx + rx - 18, my);
+                ctx.stroke();
+                ctx.fillText(`${ml * 100}mL`, cx + rx - 86, my + 4);
+            }
+
+            // Pantulan Cahaya Kaca Kiri (Specular Highlight)
+            const glassShine = ctx.createLinearGradient(cx - rx + 14, 0, cx - rx + 40, 0);
+            glassShine.addColorStop(0, 'rgba(255,255,255,0.52)');
+            glassShine.addColorStop(1, 'rgba(255,255,255,0.0)');
+            ctx.fillStyle = glassShine;
+            ctx.fillRect(cx - rx + 16, beakerTopY + 14, 24, beakerBotY - beakerTopY - 26);
+
+            // Garis Kontur Bibir & Dinding Kaca 3D
+            ctx.strokeStyle = 'rgba(255,255,255,0.88)';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(cx - rx, beakerTopY);
+            ctx.lineTo(cx - rx, beakerBotY);
+            ctx.ellipse(cx, beakerBotY, rx, ry, 0, Math.PI, 0, true);
+            ctx.lineTo(cx + rx, beakerTopY);
+            ctx.stroke();
+
+            // Elips Bibir Atas Gelas Kimia
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.ellipse(cx, beakerTopY, rx + 3, ry, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Render Gelas Kimia 3D Showcase di Beranda (Slide 1)
+        function renderHeroShowcaseCanvas() {
+            const canvas = document.getElementById('hero-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Interpolasi warna cairan beranda
+            heroCurrentRGB.r += (heroTargetRGB.r - heroCurrentRGB.r) * 0.06;
+            heroCurrentRGB.g += (heroTargetRGB.g - heroCurrentRGB.g) * 0.06;
+            heroCurrentRGB.b += (heroTargetRGB.b - heroCurrentRGB.b) * 0.06;
+
+            const r = Math.round(heroCurrentRGB.r);
+            const g = Math.round(heroCurrentRGB.g);
+            const b = Math.round(heroCurrentRGB.b);
+
+            const cx = 300;
+            const topY = 150;
+            const botY = 470;
+            const rx = 150;
+            const ry = 28;
+            const surfY = 265 + Math.sin(animTick * 0.05) * 4;
+
+            // Cahaya Glow di Belakang Gelas
+            const glow = ctx.createRadialGradient(cx, 320, 20, cx, 320, 240);
+            glow.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.45)`);
+            glow.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Dudukan Lab
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.ellipse(cx, botY + 20, rx + 30, ry + 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cairan 3D
+            const liqGrad = ctx.createLinearGradient(cx - rx, 0, cx + rx, 0);
+            liqGrad.addColorStop(0, `rgb(${Math.max(0, r - 40)}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)})`);
+            liqGrad.addColorStop(0.45, `rgb(${Math.min(255, r + 25)}, ${Math.min(255, g + 25)}, ${Math.min(255, b + 25)})`);
+            liqGrad.addColorStop(1, `rgb(${Math.max(0, r - 55)}, ${Math.max(0, g - 55)}, ${Math.max(0, b - 55)})`);
+
+            ctx.fillStyle = liqGrad;
+            ctx.beginPath();
+            ctx.moveTo(cx - rx + 5, surfY);
+            ctx.lineTo(cx - rx + 5, botY);
+            ctx.ellipse(cx, botY, rx - 5, ry - 2, 0, Math.PI, 0, true);
+            ctx.lineTo(cx + rx - 5, surfY);
+            ctx.closePath();
+            ctx.fill();
+
+            // Meniskus Atas Cairan
+            ctx.fillStyle = `rgb(${Math.min(255, r + 40)}, ${Math.min(255, g + 40)}, ${Math.min(255, b + 40)})`;
+            ctx.beginPath();
+            ctx.ellipse(cx, surfY, rx - 5, ry - 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Tetesan Jatuh di Beranda
+            for (let i = heroAutoDrops.length - 1; i >= 0; i--) {
+                const d = heroAutoDrops[i];
+                d.y += d.vy;
+                d.vy += 0.35;
+
+                ctx.fillStyle = d.color;
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, 13, 0, Math.PI * 2);
+                ctx.moveTo(d.x - 13, d.y);
+                ctx.lineTo(d.x, d.y - 25);
+                ctx.lineTo(d.x + 13, d.y);
+                ctx.fill();
+
+                if (d.y >= surfY) {
+                    if (d.targetRGB) heroTargetRGB = { ...d.targetRGB };
+                    heroAutoDrops.splice(i, 1);
+                }
+            }
+
+            // Dinding Kaca & Kilau
+            ctx.fillStyle = 'rgba(255,255,255,0.45)';
+            ctx.fillRect(cx - rx + 22, topY + 20, 26, botY - topY - 40);
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(cx - rx, topY);
+            ctx.lineTo(cx - rx, botY);
+            ctx.ellipse(cx, botY, rx, ry, 0, Math.PI, 0, true);
+            ctx.lineTo(cx + rx, topY);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.ellipse(cx, topY, rx + 4, ry, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Loop Animasi Utama 60 FPS
+        function animateLabLoop() {
+            animTick++;
+
+            if (currentSlide === 1) {
+                if (animTick % 150 === 0) {
+                    heroColorIndex = (heroColorIndex + 1) % HERO_CYCLE_COLORS.length;
+                    const c = HERO_CYCLE_COLORS[heroColorIndex];
+                    heroAutoDrops.push({ x: 300, y: 20, vy: 5, color: c.hex, targetRGB: c });
+                }
+                renderHeroShowcaseCanvas();
+            } else if (currentSlide === 4) {
+                render3DBeakerOnCanvas('free-beaker-canvas', labState.free);
+            } else if (currentSlide === 5) {
+                render3DBeakerOnCanvas('challenge-beaker-canvas', labState.challenge);
+            }
+
+            requestAnimationFrame(animateLabLoop);
+        }
+
+        /* ========================================================================
+           11. INISIALISASI SAAT HALAMAN DIMUAT (WINDOW ONLOAD)
+           ======================================================================== */
+        window.onload = function() {
+            resizeStage16x9();
+            renderDispenserRack('free');
+            renderDispenserRack('challenge');
+            renderSampleRack();
+            selectChallengeLevel(0);
+            renderQuizQuestion();
+            updateWheelInfoCard();
+            drawInteractiveColorWheel();
+            updateTTSSimulator();
+            animateLabLoop();
+        };
+    </script>
+</body>
+</html>
